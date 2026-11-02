@@ -47,6 +47,9 @@ object AfIcons {
     )
     val Lock = stroke("lock", "M7 11h10a2 2 0 0 1 2 2v6a2 2 0 0 1 -2 2H7a2 2 0 0 1 -2 -2v-6a2 2 0 0 1 2 -2z", "M8 11V7a4 4 0 0 1 8 0v4")
 
+    val Plus = stroke("plus", "M12 5v14M5 12h14", width = 2.6f)
+    val Trash = stroke("trash", "M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3")
+    val ChevronLeft = stroke("chevronLeft", "M15 5 8 12l7 7", width = 2.2f)
     val Pin = stroke("pin", "M12 21s-6-5.5-6-11a6 6 0 0 1 12 0c0 5.5-6 11-6 11z", "M10 10a2 2 0 1 0 4 0a2 2 0 1 0 -4 0")
     val Timer = stroke("timer", "M4 13a8 8 0 1 0 16 0a8 8 0 1 0 -16 0", "M12 9v4l2 2M9 2h6")
     val Info = stroke("info", "M3 12a9 9 0 1 0 18 0a9 9 0 1 0 -18 0", "M12 8h.01M11 12h1v4h1")

@@ -69,3 +69,16 @@ data class HeartRatePoint(val time: Instant, val bpm: Float)
 
 /** Lowest and highest heart rate on one day. */
 data class DailyRange(val date: java.time.LocalDate, val min: Float, val max: Float)
+
+/** A meal or food logged in Samsung Health (read only). */
+data class NutritionRecord(
+    val time: Instant,
+    val title: String?,
+    val kcal: Float?,
+    val proteinG: Float?,
+    val carbsG: Float?,
+    val fatG: Float?,
+)
+
+/** Water logged in Samsung Health (read only). */
+data class WaterRecord(val time: Instant, val ml: Float)

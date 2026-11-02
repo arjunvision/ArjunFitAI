@@ -86,6 +86,8 @@ fun HomeScreen(
     viewModel: DashboardViewModel,
     state: DashboardUiState,
     settings: UserSettings,
+    /** Samsung Health + ArjunFit weigh-ins. */
+    weights: List<com.arjunvision.arjunfitai.data.samsung.model.WeightRecord>,
     actions: HomeActions,
     contentPadding: PaddingValues,
 ) {
@@ -125,7 +127,7 @@ fun HomeScreen(
         when (state.status) {
             DashboardUiState.Status.NEEDS_PERMISSION -> NoticeCard(
                 title = "Connect Samsung Health",
-                body = "Allow ArjunFit to read your steps, heart rate, sleep, blood oxygen, weight and activity from your Galaxy Fit3.",
+                body = "Allow ArjunFit to read your steps, heart rate, sleep, blood oxygen, weight, activity, food and water from Samsung Health.",
                 primary = "Allow read access" to { activity?.let(viewModel::requestPermissions) },
             )
             DashboardUiState.Status.ERROR -> NoticeCard(
@@ -158,7 +160,7 @@ fun HomeScreen(
 
         val arcStart = WinterArc.start(today.year)
         WeightCard(
-            progress = weightProgress(data.weight, settings.targetWeightKg, arcStart, zone),
+            progress = weightProgress(weights, settings.targetWeightKg, arcStart, zone),
             targetKg = settings.targetWeightKg,
             arcStart = arcStart,
             onClick = actions.onWeight,

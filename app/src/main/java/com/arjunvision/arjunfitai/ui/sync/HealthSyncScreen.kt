@@ -73,7 +73,10 @@ fun HealthSyncScreen(
     val granted = state.permissions?.granted.orEmpty().mapNotNull { m -> SyncType.entries.firstOrNull { it.name == m.name } }.toSet()
     val failed = data.errors.keys.mapNotNull { m -> SyncType.entries.firstOrNull { it.name == m.name } }.toSet()
     val rows = syncRows(
-        SyncInputs(granted, failed, data.steps, data.activity, data.heartRate, data.exercise, data.sleep, data.bloodOxygen, data.weight),
+        SyncInputs(
+            granted, failed, data.steps, data.activity, data.heartRate, data.exercise, data.sleep, data.bloodOxygen, data.weight,
+            data.nutritionToday, data.waterToday,
+        ),
         now, zone,
     )
     val latest = latestReading(data)

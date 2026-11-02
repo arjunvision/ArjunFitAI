@@ -268,3 +268,44 @@ fun AfMedicalFooter(modifier: Modifier = Modifier) {
         modifier = modifier.fillMaxWidth(),
     )
 }
+
+/**
+ * Line + soft area over time. [points] are (x 0..1, value). Draws in left to right.
+ */
+@Composable
+fun AfTimeLine(points: List<Pair<Float, Float>>, yMin: Float, yMax: Float, description: String, modifier: Modifier = Modifier) {
+    val reveal by rememberDrawIn(1400, 200)
+    Canvas(modifier.fillMaxWidth().height(190.dp).semantics { contentDescription = description }) {
+        val w = size.width
+        val h = size.height
+        listOf(0f, 1f / 3, 2f / 3, 1f).forEach { f ->
+            val y = (h * f).coerceIn(0.5f, h - 0.5f)
+            drawLine(AfColors.Inner, Offset(0f, y), Offset(w, y), 1.dp.toPx())
+        }
+        if (points.isEmpty()) return@Canvas
+        val pad = 3.dp.toPx()
+        fun x(f: Float) = pad + f.coerceIn(0f, 1f) * (w - 2 * pad)
+        fun y(v: Float) = h - ((v - yMin) / (yMax - yMin)).coerceIn(0f, 1f) * h
+        val line = Path().apply { points.forEachIndexed { i, (fx, v) -> if (i == 0) moveTo(x(fx), y(v)) else lineTo(x(fx), y(v)) } }
+        val area = Path().apply {
+            addPath(line)
+            lineTo(x(points.last().first), h); lineTo(x(points.first().first), h); close()
+        }
+        clipRect(right = w * reveal) {
+            drawPath(area, AfColors.Accent.copy(alpha = 0.16f))
+            drawPath(line, AfColors.Accent, style = Stroke(3.dp.toPx(), cap = StrokeCap.Round, join = StrokeJoin.Round))
+            points.forEach { (fx, v) -> drawCircle(AfColors.Accent, 3.dp.toPx(), Offset(x(fx), y(v))) }
+        }
+    }
+}
+
+/** "ArjunFit" / "Samsung Health" label, so every entry shows where it came from. */
+@Composable
+fun AfSourcePill(label: String, fromSamsung: Boolean, modifier: Modifier = Modifier) {
+    Text(
+        label,
+        style = MaterialTheme.typography.labelSmall.copy(fontSize = 10.sp, fontWeight = FontWeight.Bold),
+        color = if (fromSamsung) AfColors.Water else AfColors.AccentSoft,
+        modifier = modifier.clip(AfShapes.Pill).background(AfColors.Inner).padding(horizontal = 8.dp, vertical = 2.dp),
+    )
+}

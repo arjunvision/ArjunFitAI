@@ -8,6 +8,8 @@ import com.arjunvision.arjunfitai.data.samsung.model.ExerciseRecord
 import com.arjunvision.arjunfitai.data.samsung.model.HeartRateSample
 import com.arjunvision.arjunfitai.data.samsung.model.DailyRange
 import com.arjunvision.arjunfitai.data.samsung.model.HeartRatePoint
+import com.arjunvision.arjunfitai.data.samsung.model.NutritionRecord
+import com.arjunvision.arjunfitai.data.samsung.model.WaterRecord
 import com.arjunvision.arjunfitai.data.samsung.model.SleepRecord
 import com.arjunvision.arjunfitai.data.samsung.model.SleepStageSegment
 import com.arjunvision.arjunfitai.data.samsung.model.SleepStage
@@ -83,9 +85,12 @@ class SamsungHealthRepository(
     }
 
     /** Active/total calories, active time and distance since local midnight. */
-    suspend fun getTodayActivitySummary(): Result<ActivitySummary> = call {
+    suspend fun getTodayActivitySummary(): Result<ActivitySummary> = getActivitySummary(LocalDate.now(clock))
+
+    /** Active/total calories, active time and distance for one local day. */
+    suspend fun getActivitySummary(date: LocalDate): Result<ActivitySummary> = call {
         val store = requireStore()
-        val filter = today()
+        val filter = LocalTimeFilter.of(date.atStartOfDay(), date.plusDays(1).atStartOfDay())
         val activeCalories = store.aggregateData(
             DataType.ActivitySummaryType.TOTAL_ACTIVE_CALORIES_BURNED.requestBuilder.setLocalTimeFilter(filter).build()
         ).dataList.mapNotNull { it.value }
@@ -255,6 +260,35 @@ class SamsungHealthRepository(
             .mapNotNull { d -> d.value?.let { d.getStartLocalDateTime().toLocalDate() to it } }
             .groupBy({ it.first }, { it.second })
             .mapValues { (_, v) -> v.sum() }
+    }
+
+    /** Food and meals logged in Samsung Health on [date], oldest first. */
+    suspend fun getNutrition(date: LocalDate): Result<List<NutritionRecord>> = call {
+        val request = DataTypes.NUTRITION.readDataRequestBuilder
+            .setLocalTimeFilter(LocalTimeFilter.of(date.atStartOfDay(), date.plusDays(1).atStartOfDay()))
+            .setOrdering(Ordering.ASC)
+            .build()
+        requireStore().readData(request).dataList.map { point ->
+            NutritionRecord(
+                time = point.startTime,
+                title = point.getValue(DataType.NutritionType.TITLE),
+                kcal = point.getValue(DataType.NutritionType.CALORIES),
+                proteinG = point.getValue(DataType.NutritionType.PROTEIN),
+                carbsG = point.getValue(DataType.NutritionType.CARBOHYDRATE),
+                fatG = point.getValue(DataType.NutritionType.TOTAL_FAT),
+            )
+        }
+    }
+
+    /** Water logged in Samsung Health on [date], oldest first (ml). */
+    suspend fun getWaterIntake(date: LocalDate): Result<List<WaterRecord>> = call {
+        val request = DataTypes.WATER_INTAKE.readDataRequestBuilder
+            .setLocalTimeFilter(LocalTimeFilter.of(date.atStartOfDay(), date.plusDays(1).atStartOfDay()))
+            .setOrdering(Ordering.ASC)
+            .build()
+        requireStore().readData(request).dataList.mapNotNull { point ->
+            point.getValue(DataType.WaterIntakeType.AMOUNT)?.let { WaterRecord(point.startTime, it) }
+        }
     }
 
     private fun requireStore(): HealthDataStore =

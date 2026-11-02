@@ -24,6 +24,12 @@ class ProfileModelTest {
         assertNotNull(bad.kcalError)
     }
 
+    @Test fun nutritionTargetsValidate() {
+        assertEquals(NutritionTargets(3000, 250, 70), parseNutritionTargets("3000", "250", "70"))
+        assertNull(parseNutritionTargets("100", "250", "70"))
+        assertNull(parseNutritionTargets("3000", "", "70"))
+    }
+
     @Test fun targetFormatting() {
         assertEquals("95 kg", formatTarget(95f))
         assertEquals("94.5 kg", formatTarget(94.5f))

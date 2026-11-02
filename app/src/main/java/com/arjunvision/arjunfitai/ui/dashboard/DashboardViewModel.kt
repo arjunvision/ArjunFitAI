@@ -11,6 +11,8 @@ import com.arjunvision.arjunfitai.data.samsung.model.ActivitySummary
 import com.arjunvision.arjunfitai.data.samsung.model.BloodOxygenSample
 import com.arjunvision.arjunfitai.data.samsung.model.ExerciseRecord
 import com.arjunvision.arjunfitai.data.samsung.model.HeartRateSample
+import com.arjunvision.arjunfitai.data.samsung.model.NutritionRecord
+import com.arjunvision.arjunfitai.data.samsung.model.WaterRecord
 import com.arjunvision.arjunfitai.data.samsung.model.SleepRecord
 import com.arjunvision.arjunfitai.data.samsung.model.WeightRecord
 import com.arjunvision.arjunfitai.ui.home.WinterArc
@@ -33,6 +35,8 @@ data class HealthSnapshot(
     val sleep: List<SleepRecord> = emptyList(),
     val bloodOxygen: List<BloodOxygenSample> = emptyList(),
     val weight: List<WeightRecord> = emptyList(),
+    val nutritionToday: List<NutritionRecord> = emptyList(),
+    val waterToday: List<WaterRecord> = emptyList(),
     /** Per-metric read failures, so one bad data type doesn't blank the whole dashboard. */
     val errors: Map<HealthMetric, String> = emptyMap(),
 )
@@ -130,6 +134,8 @@ class DashboardViewModel(private val repository: SamsungHealthRepository) : View
             val sleep = async { if (HealthMetric.SLEEP in granted) repository.getSleepHistory() else null }
             val oxygen = async { if (HealthMetric.BLOOD_OXYGEN in granted) repository.getBloodOxygenHistory() else null }
             val weight = async { if (HealthMetric.BODY_COMPOSITION in granted) repository.getWeightHistory(weightHistoryDays()) else null }
+            val nutrition = async { if (HealthMetric.NUTRITION in granted) repository.getNutrition(LocalDate.now()) else null }
+            val water = async { if (HealthMetric.WATER_INTAKE in granted) repository.getWaterIntake(LocalDate.now()) else null }
             HealthSnapshot(
                 steps = steps.await().valueOr(HealthMetric.STEPS, null),
                 activity = activity.await().valueOr(HealthMetric.ACTIVITY_SUMMARY, null),
@@ -138,6 +144,8 @@ class DashboardViewModel(private val repository: SamsungHealthRepository) : View
                 sleep = sleep.await().valueOr(HealthMetric.SLEEP, emptyList()),
                 bloodOxygen = oxygen.await().valueOr(HealthMetric.BLOOD_OXYGEN, emptyList()),
                 weight = weight.await().valueOr(HealthMetric.BODY_COMPOSITION, emptyList()),
+                nutritionToday = nutrition.await().valueOr(HealthMetric.NUTRITION, emptyList()),
+                waterToday = water.await().valueOr(HealthMetric.WATER_INTAKE, emptyList()),
                 errors = errors,
             )
         }

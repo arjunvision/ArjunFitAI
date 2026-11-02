@@ -4,6 +4,8 @@ import com.arjunvision.arjunfitai.data.samsung.model.ActivitySummary
 import com.arjunvision.arjunfitai.data.samsung.model.BloodOxygenSample
 import com.arjunvision.arjunfitai.data.samsung.model.ExerciseRecord
 import com.arjunvision.arjunfitai.data.samsung.model.HeartRateSample
+import com.arjunvision.arjunfitai.data.samsung.model.NutritionRecord
+import com.arjunvision.arjunfitai.data.samsung.model.WaterRecord
 import com.arjunvision.arjunfitai.data.samsung.model.SleepRecord
 import com.arjunvision.arjunfitai.data.samsung.model.WeightRecord
 import com.arjunvision.arjunfitai.ui.home.formatSteps
@@ -28,6 +30,8 @@ enum class SyncType(val label: String) {
     BLOOD_OXYGEN("Blood oxygen"),
     BODY_COMPOSITION("Body composition"),
     ACTIVITY_SUMMARY("Activity summary"),
+    NUTRITION("Nutrition"),
+    WATER_INTAKE("Water intake"),
 }
 
 /** [hasRecords] drives the ✓ (green) vs – badge. */
@@ -43,6 +47,8 @@ class SyncInputs(
     val sleep: List<SleepRecord>,
     val bloodOxygen: List<BloodOxygenSample>,
     val weight: List<WeightRecord>,
+    val nutritionToday: List<NutritionRecord> = emptyList(),
+    val waterToday: List<WaterRecord> = emptyList(),
 )
 
 fun syncRows(inputs: SyncInputs, now: Instant, zone: ZoneId): List<SyncRow> = SyncType.entries.map { type ->
@@ -66,6 +72,8 @@ private fun rowFor(type: SyncType, i: SyncInputs, now: Instant, zone: ZoneId): S
     SyncType.ACTIVITY_SUMMARY -> i.activity
         ?.takeIf { it.activeCaloriesKcal != null || it.totalCaloriesKcal != null || it.activeTime != null || it.distanceMeters != null }
         ?.let { SyncRow(type, true, "Today") }
+    SyncType.NUTRITION -> i.nutritionToday.size.takeIf { it > 0 }?.let { SyncRow(type, true, if (it == 1) "1 entry today" else "$it entries today") }
+    SyncType.WATER_INTAKE -> i.waterToday.sumOf { it.ml.toDouble() }.takeIf { it > 0 }?.let { SyncRow(type, true, "Today ${it.roundToInt()} ml") }
 }
 
 /** "2 today", "3 this week" (Monday start), else the last session's date. */

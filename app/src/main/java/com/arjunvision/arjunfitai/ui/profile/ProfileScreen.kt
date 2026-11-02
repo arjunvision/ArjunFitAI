@@ -52,6 +52,8 @@ import com.arjunvision.arjunfitai.BuildConfig
 import com.arjunvision.arjunfitai.R
 import com.arjunvision.arjunfitai.data.settings.UserSettings
 import com.arjunvision.arjunfitai.ui.components.AfCard
+import com.arjunvision.arjunfitai.ui.components.AfDialog
+import com.arjunvision.arjunfitai.ui.components.AfTextField
 import com.arjunvision.arjunfitai.ui.components.AfIconWell
 import com.arjunvision.arjunfitai.ui.components.AfIcons
 import com.arjunvision.arjunfitai.ui.components.AfScreenHeader
@@ -162,8 +164,13 @@ fun ProfileScreen(
             save { it.copy(name = name, tagline = tagline) }
             dialog = null
         }
-        ProfileDialog.GOALS -> GoalsDialog(settings, onDismiss = { dialog = null }) { kg, steps, kcal ->
-            save { it.copy(targetWeightKg = kg, stepGoal = steps, calorieGoalKcal = kcal) }
+        ProfileDialog.GOALS -> GoalsDialog(settings, onDismiss = { dialog = null }) { kg, steps, kcal, targets ->
+            save {
+                it.copy(
+                    targetWeightKg = kg, stepGoal = steps, calorieGoalKcal = kcal,
+                    waterGoalMl = targets.waterMl, carbsTargetG = targets.carbsG, fatTargetG = targets.fatG,
+                )
+            }
             dialog = null
         }
         ProfileDialog.APP_SETTINGS -> InfoDialog(
@@ -246,20 +253,30 @@ private fun NameDialog(settings: UserSettings, onDismiss: () -> Unit, onSave: (S
 }
 
 @Composable
-private fun GoalsDialog(settings: UserSettings, onDismiss: () -> Unit, onSave: (Float, Int, Int) -> Unit) {
+private fun GoalsDialog(settings: UserSettings, onDismiss: () -> Unit, onSave: (Float, Int, Int, NutritionTargets) -> Unit) {
     var kg by rememberSaveable { mutableStateOf(formatTarget(settings.targetWeightKg).removeSuffix(" kg")) }
     var steps by rememberSaveable { mutableStateOf(settings.stepGoal.toString()) }
     var kcal by rememberSaveable { mutableStateOf(settings.calorieGoalKcal.toString()) }
+    var water by rememberSaveable { mutableStateOf(settings.waterGoalMl.toString()) }
+    var carbs by rememberSaveable { mutableStateOf(settings.carbsTargetG.toString()) }
+    var fat by rememberSaveable { mutableStateOf(settings.fatTargetG.toString()) }
     val goals = parseGoals(kg, steps, kcal)
+    val targets = parseNutritionTargets(water, carbs, fat)
     AfDialog(
         title = "My goals",
         onDismiss = onDismiss,
-        confirm = "Save" to { goals.valid?.let { (w, s, c) -> onSave(w, s, c) } },
-        confirmEnabled = goals.valid != null,
+        confirm = "Save" to { goals.valid?.let { (w, s, c) -> targets?.let { onSave(w, s, c, it) } } },
+        confirmEnabled = goals.valid != null && targets != null,
     ) {
         AfTextField(kg, { kg = it }, "Target weight (kg)", KeyboardOptions(keyboardType = KeyboardType.Decimal), goals.weightError)
         AfTextField(steps, { steps = it.filter(Char::isDigit) }, "Daily steps", KeyboardOptions(keyboardType = KeyboardType.Number), goals.stepsError)
         AfTextField(kcal, { kcal = it.filter(Char::isDigit) }, "Daily calories (kcal)", KeyboardOptions(keyboardType = KeyboardType.Number), goals.kcalError)
+        AfTextField(water, { water = it.filter(Char::isDigit) }, "Daily water (ml)", KeyboardOptions(keyboardType = KeyboardType.Number), if (targets == null && water.toIntOrNull() !in 500..6_000) "Enter 500–6,000" else null)
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            Box(Modifier.weight(1f)) { AfTextField(carbs, { carbs = it.filter(Char::isDigit) }, "Carbs g", KeyboardOptions(keyboardType = KeyboardType.Number)) }
+            Box(Modifier.weight(1f)) { AfTextField(fat, { fat = it.filter(Char::isDigit) }, "Fat g", KeyboardOptions(keyboardType = KeyboardType.Number)) }
+        }
+        Text("Protein target: ${settings.proteinMinG}–${settings.proteinMaxG} g a day", style = MaterialTheme.typography.bodySmall)
     }
 }
 
@@ -268,54 +285,6 @@ private fun InfoDialog(title: String, body: String, onDismiss: () -> Unit) {
     AfDialog(title = title, onDismiss = onDismiss, confirm = "Close" to onDismiss, showCancel = false) {
         Text(body, style = MaterialTheme.typography.bodyMedium, color = AfColors.TextMuted)
     }
-}
-
-@Composable
-private fun AfDialog(
-    title: String,
-    onDismiss: () -> Unit,
-    confirm: Pair<String, () -> Unit>,
-    confirmEnabled: Boolean = true,
-    showCancel: Boolean = true,
-    content: @Composable () -> Unit,
-) {
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        confirmButton = {
-            TextButton(onClick = confirm.second, enabled = confirmEnabled) {
-                Text(confirm.first, color = if (confirmEnabled) AfColors.AccentSoft else AfColors.TextMuted)
-            }
-        },
-        dismissButton = if (showCancel) ({ TextButton(onClick = onDismiss) { Text("Cancel", color = AfColors.Text) } }) else null,
-        title = { Text(title) },
-        text = { Column(verticalArrangement = Arrangement.spacedBy(12.dp)) { content() } },
-        containerColor = AfColors.Card,
-        titleContentColor = AfColors.Text,
-        textContentColor = AfColors.TextMuted,
-        shape = AfShapes.Card,
-    )
-}
-
-@Composable
-private fun AfTextField(value: String, onValueChange: (String) -> Unit, label: String, keyboard: KeyboardOptions, error: String? = null) {
-    OutlinedTextField(
-        value = value,
-        onValueChange = onValueChange,
-        label = { Text(label) },
-        singleLine = true,
-        isError = error != null,
-        supportingText = error?.let { { Text(it) } },
-        keyboardOptions = keyboard,
-        colors = OutlinedTextFieldDefaults.colors(
-            focusedBorderColor = AfColors.Accent,
-            unfocusedBorderColor = AfColors.Border,
-            focusedLabelColor = AfColors.AccentSoft,
-            cursorColor = AfColors.Accent,
-            focusedTextColor = AfColors.Text,
-            unfocusedTextColor = AfColors.Text,
-        ),
-        modifier = Modifier.fillMaxWidth(),
-    )
 }
 
 /** "SB" for "Sri Balaji Aravind"; empty when there is no name. */
@@ -342,4 +311,14 @@ internal fun parseGoals(kg: String, steps: String, kcal: String): GoalsInput {
     val cErr = if (c == null || c !in 1_000..6_000) "Enter 1,000–6,000" else null
     val valid = if (wErr == null && sErr == null && cErr == null) Triple(w!!, s!!, c!!) else null
     return GoalsInput(valid, wErr, sErr, cErr)
+}
+
+internal data class NutritionTargets(val waterMl: Int, val carbsG: Int, val fatG: Int)
+
+/** Water 500–6,000 ml, carbs 20–800 g, fat 10–300 g; null if any is out of range. */
+internal fun parseNutritionTargets(water: String, carbs: String, fat: String): NutritionTargets? {
+    val w = water.toIntOrNull()?.takeIf { it in 500..6_000 } ?: return null
+    val c = carbs.toIntOrNull()?.takeIf { it in 20..800 } ?: return null
+    val f = fat.toIntOrNull()?.takeIf { it in 10..300 } ?: return null
+    return NutritionTargets(w, c, f)
 }

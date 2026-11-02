@@ -4,6 +4,8 @@ plugins {
     alias(libs.plugins.kotlin.compose)
     // Required by the Samsung Health Data SDK.
     alias(libs.plugins.kotlin.parcelize)
+    // Room code generation for the in-app food, water and weight log.
+    alias(libs.plugins.ksp)
 }
 
 android {
@@ -15,8 +17,8 @@ android {
         // Samsung Health (and so the Data SDK) runs on Android 10 / API 29 and later.
         minSdk = 29
         targetSdk = 36
-        versionCode = 5
-        versionName = "0.4.0"
+        versionCode = 6
+        versionName = "0.5.0"
     }
 
     buildTypes {
@@ -79,6 +81,9 @@ dependencies {
     implementation(libs.androidx.navigation.compose)
     // In-app settings and goals (Samsung Health stays read-only).
     implementation(libs.datastore.preferences)
+    implementation(libs.room.runtime)
+    implementation(libs.room.ktx)
+    ksp(libs.room.compiler)
     debugImplementation(libs.compose.ui.tooling)
 
     testImplementation(libs.junit)

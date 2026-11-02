@@ -57,10 +57,14 @@ import com.arjunvision.arjunfitai.ui.components.AfIcons
 import com.arjunvision.arjunfitai.ui.connect.ConnectScreen
 import com.arjunvision.arjunfitai.ui.components.LocalReduceMotion
 import com.arjunvision.arjunfitai.ui.components.systemReducesMotion
-import com.arjunvision.arjunfitai.ui.dashboard.DashboardScreen
 import com.arjunvision.arjunfitai.ui.dashboard.DashboardUiState
 import com.arjunvision.arjunfitai.ui.dashboard.DashboardViewModel
+import com.arjunvision.arjunfitai.data.local.LocalLogDatabase
 import com.arjunvision.arjunfitai.ui.detail.HeartRateScreen
+import com.arjunvision.arjunfitai.ui.nutrition.NutritionScreen
+import com.arjunvision.arjunfitai.ui.weight.WeightScreen
+import com.arjunvision.arjunfitai.ui.weight.asRecords
+import com.arjunvision.arjunfitai.ui.weight.mergeWeights
 import com.arjunvision.arjunfitai.ui.detail.SleepScreen
 import com.arjunvision.arjunfitai.ui.detail.StepsScreen
 import com.arjunvision.arjunfitai.ui.home.HomeActions
@@ -90,7 +94,6 @@ private object Routes {
     const val PROFILE = "profile"
     const val HEALTH_SYNC = "health-sync"
     const val CONNECT = "connect"
-    const val ALL_DATA = "all-data"
 }
 
 private data class Tab(val route: String, val label: String, val icon: ImageVector)
@@ -166,6 +169,11 @@ private fun MainScaffold(
 ) {
     val nav = rememberNavController()
     val activity = LocalActivity.current
+    val appContext = LocalContext.current.applicationContext
+    val db = remember { LocalLogDatabase.get(appContext) }
+    val localWeights by db.weight().all().collectAsStateWithLifecycle(emptyList())
+    // Samsung Health body-composition weights + weights logged in ArjunFit.
+    val weighIns = mergeWeights(state.data.weight, localWeights)
     val scope = rememberCoroutineScope()
     // First run: Connect Device sits on top of Home, so Back lands on Home.
     LaunchedEffect(openConnect) {
@@ -183,13 +191,13 @@ private fun MainScaffold(
         bottomBar = { if (Tabs.any { it.route == route }) BottomBar(route) { nav.navigateToTab(it) } },
     ) { padding ->
         val back: () -> Unit = { nav.popBackStack() }
-        val allData: () -> Unit = { nav.navigate(Routes.ALL_DATA) }
         NavHost(nav, startDestination = Routes.HOME) {
             composable(Routes.HOME) {
                 HomeScreen(
                     viewModel = viewModel,
                     state = state,
                     settings = settings,
+                    weights = weighIns.asRecords(),
                     actions = HomeActions(
                         onSteps = { nav.navigate(Routes.STEPS) },
                         onHeartRate = { nav.navigate(Routes.HEART_RATE) },
@@ -204,7 +212,13 @@ private fun MainScaffold(
                 )
             }
             composable(Routes.WORKOUT) { ComingSoonScreen("Workout", 5, padding, onBack = null) }
-            composable(Routes.NUTRITION) { ComingSoonScreen("Nutrition", 4, padding, onBack = null) }
+            composable(Routes.NUTRITION) {
+                NutritionScreen(
+                    state, settings, db,
+                    repository::getNutrition, repository::getWaterIntake, repository::getActivitySummary,
+                    padding,
+                )
+            }
             composable(Routes.PROGRESS) { ComingSoonScreen("Progress", 6, padding, onBack = null) }
             composable(Routes.STEPS) {
                 StepsScreen(state, settings.stepGoal, repository::getDailySteps, padding, onBack = back)
@@ -214,7 +228,7 @@ private fun MainScaffold(
             }
             composable(Routes.SLEEP) { SleepScreen(state, startOnOxygen = false, contentPadding = padding, onBack = back) }
             composable(Routes.OXYGEN) { SleepScreen(state, startOnOxygen = true, contentPadding = padding, onBack = back) }
-            composable(Routes.WEIGHT) { ComingSoonScreen("Weight tracker", 4, padding, back, allData) }
+            composable(Routes.WEIGHT) { WeightScreen(weighIns, settings, db, padding, onBack = back) }
             composable(Routes.COACH) { ComingSoonScreen("AI coach", 7, padding, back) }
             composable(Routes.PROFILE) {
                 ProfileScreen(
@@ -246,11 +260,6 @@ private fun MainScaffold(
                         }
                     },
                 )
-            }
-            composable(Routes.ALL_DATA) {
-                Box(Modifier.padding(padding).consumeWindowInsets(padding)) {
-                    DashboardScreen(viewModel, onBack = back)
-                }
             }
         }
     }

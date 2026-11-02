@@ -46,8 +46,10 @@ class HealthSyncModelTest {
         assertEquals("Latest 97%", rows[4].note)
         assertEquals("Weight 110.0 kg", rows[5].note)
         assertEquals("No records yet", rows[6].note)
-        assertEquals("5 of 7 data types have records", syncSummary(rows, null, now, zone))
-        assertEquals("5 of 7 data types have records · updated just now", syncSummary(rows, now.minusSeconds(20), now, zone))
+        assertEquals("No records yet", rows[7].note)
+        assertEquals("No records yet", rows[8].note)
+        assertEquals("5 of 9 data types have records", syncSummary(rows, null, now, zone))
+        assertEquals("5 of 9 data types have records · updated just now", syncSummary(rows, now.minusSeconds(20), now, zone))
     }
 
     @Test fun exerciseFallsBackToWeekThenLastDate() {

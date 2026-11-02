@@ -15,7 +15,9 @@ enum class HealthMetric(val label: String, internal val dataType: DataType) {
     BODY_COMPOSITION("Weight & body composition", DataTypes.BODY_COMPOSITION),
 
     /** Active calories, total calories, active time and distance. */
-    ACTIVITY_SUMMARY("Activity summary", DataTypes.ACTIVITY_SUMMARY);
+    ACTIVITY_SUMMARY("Activity summary", DataTypes.ACTIVITY_SUMMARY),
+    NUTRITION("Nutrition", DataTypes.NUTRITION),
+    WATER_INTAKE("Water intake", DataTypes.WATER_INTAKE);
 
     internal val readPermission: Permission get() = Permission.of(dataType, AccessType.READ)
 
