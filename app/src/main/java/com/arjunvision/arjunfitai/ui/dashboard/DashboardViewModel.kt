@@ -13,6 +13,9 @@ import com.arjunvision.arjunfitai.data.samsung.model.ExerciseRecord
 import com.arjunvision.arjunfitai.data.samsung.model.HeartRateSample
 import com.arjunvision.arjunfitai.data.samsung.model.SleepRecord
 import com.arjunvision.arjunfitai.data.samsung.model.WeightRecord
+import com.arjunvision.arjunfitai.ui.home.WinterArc
+import java.time.LocalDate
+import java.time.temporal.ChronoUnit
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -115,7 +118,7 @@ class DashboardViewModel(private val repository: SamsungHealthRepository) : View
             val exercise = async { if (HealthMetric.EXERCISE in granted) repository.getExerciseHistory() else null }
             val sleep = async { if (HealthMetric.SLEEP in granted) repository.getSleepHistory() else null }
             val oxygen = async { if (HealthMetric.BLOOD_OXYGEN in granted) repository.getBloodOxygenHistory() else null }
-            val weight = async { if (HealthMetric.BODY_COMPOSITION in granted) repository.getWeightHistory() else null }
+            val weight = async { if (HealthMetric.BODY_COMPOSITION in granted) repository.getWeightHistory(weightHistoryDays()) else null }
             HealthSnapshot(
                 steps = steps.await().valueOr(HealthMetric.STEPS, null),
                 activity = activity.await().valueOr(HealthMetric.ACTIVITY_SUMMARY, null),
@@ -128,6 +131,13 @@ class DashboardViewModel(private val repository: SamsungHealthRepository) : View
             )
         }
         _state.update { it.copy(isRefreshing = false, data = snapshot) }
+    }
+
+    /** Back to 60 days before this year's Winter Arc start, so the weight card has a baseline; at least 90 days. */
+    private fun weightHistoryDays(): Long {
+        val today = LocalDate.now()
+        val from = WinterArc.start(today.year).minusDays(60)
+        return maxOf(90L, ChronoUnit.DAYS.between(from, today))
     }
 
     private fun fail(throwable: Throwable) {

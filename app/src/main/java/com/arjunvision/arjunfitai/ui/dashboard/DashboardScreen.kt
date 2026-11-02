@@ -28,19 +28,13 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.stringResource
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.viewmodel.compose.viewModel
-import androidx.lifecycle.viewmodel.initializer
-import androidx.lifecycle.viewmodel.viewModelFactory
-import com.arjunvision.arjunfitai.R
-import com.arjunvision.arjunfitai.data.samsung.SamsungHealthRepository
 import com.arjunvision.arjunfitai.data.samsung.model.SleepStage
+import com.arjunvision.arjunfitai.ui.components.AfIcons
 import java.time.Duration
 import java.time.Instant
 import java.time.ZoneId
@@ -49,18 +43,18 @@ import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun DashboardScreen() {
-    val appContext = LocalContext.current.applicationContext
-    val viewModel: DashboardViewModel = viewModel(
-        factory = viewModelFactory { initializer { DashboardViewModel(SamsungHealthRepository(appContext)) } }
-    )
+fun DashboardScreen(viewModel: DashboardViewModel, onBack: () -> Unit) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     val activity = LocalActivity.current
 
-    // Coming back from Samsung Health (install / update / setup / Developer Mode) → re-check.
-    LifecycleEventEffect(Lifecycle.Event.ON_RESUME) { viewModel.onResume() }
-
-    Scaffold(topBar = { TopAppBar(title = { Text(stringResource(R.string.app_name)) }) }) { padding ->
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = { Text("All Samsung Health data") },
+                navigationIcon = { IconButton(onClick = onBack) { Icon(AfIcons.Back, contentDescription = "Back") } },
+            )
+        },
+    ) { padding ->
         PullToRefreshBox(
             isRefreshing = state.isRefreshing,
             onRefresh = viewModel::refresh,
@@ -234,7 +228,7 @@ private fun BloodOxygenCard(data: HealthSnapshot) = SectionCard("Blood oxygen ·
 }
 
 @Composable
-private fun WeightCard(data: HealthSnapshot) = SectionCard("Weight · 90 days") {
+private fun WeightCard(data: HealthSnapshot) = SectionCard("Weight · since ${formatDate(data.weight.lastOrNull()?.time ?: Instant.now())}") {
     val latest = data.weight.firstOrNull()
     if (latest == null) {
         Empty()

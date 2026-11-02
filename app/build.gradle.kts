@@ -15,8 +15,8 @@ android {
         // Samsung Health (and so the Data SDK) runs on Android 10 / API 29 and later.
         minSdk = 29
         targetSdk = 36
-        versionCode = 2
-        versionName = "0.1.1"
+        versionCode = 3
+        versionName = "0.2.0"
     }
 
     buildTypes {
@@ -74,6 +74,9 @@ dependencies {
     implementation(libs.compose.ui.tooling.preview)
     implementation(libs.compose.material3)
     implementation(libs.coroutines.android)
+    implementation(libs.androidx.navigation.compose)
+    // In-app settings and goals (Samsung Health stays read-only).
+    implementation(libs.datastore.preferences)
     debugImplementation(libs.compose.ui.tooling)
 
     testImplementation(libs.junit)

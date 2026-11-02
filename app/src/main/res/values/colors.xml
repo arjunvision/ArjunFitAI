@@ -1,4 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="ic_launcher_background">#0E7C66</color>
+    <!-- Keep in step with AfColors in ui/theme/Theme.kt. -->
+    <color name="af_background">#121820</color>
+    <color name="ic_launcher_background">#121820</color>
 </resources>
