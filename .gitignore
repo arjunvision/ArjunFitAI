@@ -1,0 +1,14 @@
+*.iml
+.gradle
+/local.properties
+/.idea
+.DS_Store
+/build
+/app/build
+/captures
+.externalNativeBuild
+.cxx
+.kotlin
+
+# Samsung Health Data SDK: download from developer.samsung.com (see README), never commit
+app/libs/*.aar
