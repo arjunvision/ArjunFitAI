@@ -184,7 +184,9 @@ fun ProfileScreen(
             "ArjunFit only reads from Samsung Health — it never writes to it.\n\n" +
                 "Your health data is read on this phone and is not sent anywhere. Your name and goals are " +
                 "stored in ArjunFit on this phone.\n\nChange what ArjunFit may read any time in Health sync › " +
-                "Review permissions.\n\nFonts: Poppins (SIL Open Font License 1.1), Satisfy (Apache License 2.0).",
+                "Review permissions.\n\nWorkouts, plans and sets are stored in ArjunFit on this phone.\n\n" +
+                "Exercises and photos: free-exercise-db by yuhonas (public domain, Unlicense). " +
+                "Fonts: Poppins (SIL Open Font License 1.1), Satisfy (Apache License 2.0).",
         ) { dialog = null }
         null -> Unit
     }

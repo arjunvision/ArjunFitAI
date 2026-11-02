@@ -65,6 +65,15 @@ import com.arjunvision.arjunfitai.ui.nutrition.NutritionScreen
 import com.arjunvision.arjunfitai.ui.weight.WeightScreen
 import com.arjunvision.arjunfitai.ui.weight.asRecords
 import com.arjunvision.arjunfitai.ui.weight.mergeWeights
+import com.arjunvision.arjunfitai.data.workout.Exercise
+import com.arjunvision.arjunfitai.data.workout.ExerciseLibrary
+import com.arjunvision.arjunfitai.data.workout.WorkoutDatabase
+import com.arjunvision.arjunfitai.data.workout.WorkoutRepository
+import com.arjunvision.arjunfitai.ui.workout.RestTimer
+import com.arjunvision.arjunfitai.ui.workout.workoutGraph
+import androidx.compose.runtime.produceState
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import com.arjunvision.arjunfitai.ui.detail.SleepScreen
 import com.arjunvision.arjunfitai.ui.detail.StepsScreen
 import com.arjunvision.arjunfitai.ui.home.HomeActions
@@ -174,7 +183,11 @@ private fun MainScaffold(
     val localWeights by db.weight().all().collectAsStateWithLifecycle(emptyList())
     // Samsung Health body-composition weights + weights logged in ArjunFit.
     val weighIns = mergeWeights(state.data.weight, localWeights)
+    val workoutRepo = remember { WorkoutRepository(WorkoutDatabase.get(appContext)) }
+    LaunchedEffect(Unit) { workoutRepo.ensureSeeded() }
     val scope = rememberCoroutineScope()
+    val restTimer = remember { RestTimer(appContext, scope) }
+    val library = produceState(emptyList<Exercise>()) { value = withContext(Dispatchers.Default) { ExerciseLibrary.load(appContext) } }
     // First run: Connect Device sits on top of Home, so Back lands on Home.
     LaunchedEffect(openConnect) {
         if (openConnect) {
@@ -211,7 +224,7 @@ private fun MainScaffold(
                     contentPadding = padding,
                 )
             }
-            composable(Routes.WORKOUT) { ComingSoonScreen("Workout", 5, padding, onBack = null) }
+            workoutGraph(nav, padding, workoutRepo, restTimer, library)
             composable(Routes.NUTRITION) {
                 NutritionScreen(
                     state, settings, db,
