@@ -71,6 +71,9 @@ import com.arjunvision.arjunfitai.data.workout.WorkoutDatabase
 import com.arjunvision.arjunfitai.data.workout.WorkoutRepository
 import com.arjunvision.arjunfitai.ui.workout.RestTimer
 import com.arjunvision.arjunfitai.ui.workout.workoutGraph
+import com.arjunvision.arjunfitai.ui.workout.WorkoutRoutes
+import com.arjunvision.arjunfitai.ui.progress.ProgressActions
+import com.arjunvision.arjunfitai.ui.progress.ProgressScreen
 import androidx.compose.runtime.produceState
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -232,7 +235,21 @@ private fun MainScaffold(
                     padding,
                 )
             }
-            composable(Routes.PROGRESS) { ComingSoonScreen("Progress", 6, padding, onBack = null) }
+            composable(Routes.PROGRESS) {
+                val plans by workoutRepo.plans.collectAsStateWithLifecycle(emptyList())
+                val sessions by workoutRepo.sessions.collectAsStateWithLifecycle(emptyList())
+                val sets by workoutRepo.sets.collectAsStateWithLifecycle(emptyList())
+                ProgressScreen(
+                    state, settings, weighIns, plans, sessions, sets,
+                    loadDailySteps = repository::getDailySteps,
+                    actions = ProgressActions(
+                        onLogWeight = { nav.navigate(Routes.WEIGHT) },
+                        onWorkouts = { nav.navigateToTab(Routes.WORKOUT) },
+                        onPrs = { nav.navigate(WorkoutRoutes.PRS) },
+                    ),
+                    contentPadding = padding,
+                )
+            }
             composable(Routes.STEPS) {
                 StepsScreen(state, settings.stepGoal, repository::getDailySteps, padding, onBack = back)
             }

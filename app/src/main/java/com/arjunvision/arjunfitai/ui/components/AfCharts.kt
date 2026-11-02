@@ -273,9 +273,9 @@ fun AfMedicalFooter(modifier: Modifier = Modifier) {
  * Line + soft area over time. [points] are (x 0..1, value). Draws in left to right.
  */
 @Composable
-fun AfTimeLine(points: List<Pair<Float, Float>>, yMin: Float, yMax: Float, description: String, modifier: Modifier = Modifier) {
+fun AfTimeLine(points: List<Pair<Float, Float>>, yMin: Float, yMax: Float, description: String, modifier: Modifier = Modifier, chartHeight: Dp = 190.dp) {
     val reveal by rememberDrawIn(1400, 200)
-    Canvas(modifier.fillMaxWidth().height(190.dp).semantics { contentDescription = description }) {
+    Canvas(modifier.fillMaxWidth().height(chartHeight).semantics { contentDescription = description }) {
         val w = size.width
         val h = size.height
         listOf(0f, 1f / 3, 2f / 3, 1f).forEach { f ->
