@@ -14,6 +14,7 @@ import com.arjunvision.arjunfitai.data.samsung.model.HeartRateSample
 import com.arjunvision.arjunfitai.data.samsung.model.SleepRecord
 import com.arjunvision.arjunfitai.data.samsung.model.WeightRecord
 import com.arjunvision.arjunfitai.ui.home.WinterArc
+import java.time.Instant
 import java.time.LocalDate
 import java.time.temporal.ChronoUnit
 import kotlinx.coroutines.async
@@ -42,6 +43,8 @@ data class DashboardUiState(
     val error: SamsungHealthError? = null,
     val isRefreshing: Boolean = false,
     val data: HealthSnapshot = HealthSnapshot(),
+    /** When the last read from Samsung Health finished. */
+    val lastUpdated: Instant? = null,
 ) {
     enum class Status { CONNECTING, NEEDS_PERMISSION, READY, ERROR }
 }
@@ -67,9 +70,16 @@ class DashboardViewModel(private val repository: SamsungHealthRepository) : View
         }
     }
 
-    fun requestPermissions(activity: Activity) {
+    /** Shows Samsung Health's consent screen; [onDone] runs once the answer is known, before data loads. */
+    fun requestPermissions(activity: Activity, onDone: () -> Unit = {}) {
         viewModelScope.launch {
-            repository.requestReadPermissions(activity).fold(onSuccess = { onPermissions(it) }, onFailure = ::fail)
+            repository.requestReadPermissions(activity).fold(
+                onSuccess = { onPermissions(it, onDone) },
+                onFailure = {
+                    fail(it)
+                    onDone()
+                },
+            )
         }
     }
 
@@ -87,7 +97,7 @@ class DashboardViewModel(private val repository: SamsungHealthRepository) : View
         viewModelScope.launch { load(permissions) }
     }
 
-    private suspend fun onPermissions(permissions: PermissionStatus) {
+    private suspend fun onPermissions(permissions: PermissionStatus, onUpdated: () -> Unit = {}) {
         _state.update {
             it.copy(
                 permissions = permissions,
@@ -95,6 +105,7 @@ class DashboardViewModel(private val repository: SamsungHealthRepository) : View
                 status = if (permissions.noneGranted) DashboardUiState.Status.NEEDS_PERMISSION else DashboardUiState.Status.READY,
             )
         }
+        onUpdated()
         if (!permissions.noneGranted) load(permissions)
     }
 
@@ -130,7 +141,7 @@ class DashboardViewModel(private val repository: SamsungHealthRepository) : View
                 errors = errors,
             )
         }
-        _state.update { it.copy(isRefreshing = false, data = snapshot) }
+        _state.update { it.copy(isRefreshing = false, data = snapshot, lastUpdated = Instant.now()) }
     }
 
     /** Back to 60 days before this year's Winter Arc start, so the weight card has a baseline; at least 90 days. */

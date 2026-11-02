@@ -1,5 +1,6 @@
 package com.arjunvision.arjunfitai.ui
 
+import androidx.activity.compose.LocalActivity
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -25,6 +26,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -52,6 +54,7 @@ import com.arjunvision.arjunfitai.data.samsung.SamsungHealthRepository
 import com.arjunvision.arjunfitai.data.settings.SettingsRepository
 import com.arjunvision.arjunfitai.data.settings.UserSettings
 import com.arjunvision.arjunfitai.ui.components.AfIcons
+import com.arjunvision.arjunfitai.ui.connect.ConnectScreen
 import com.arjunvision.arjunfitai.ui.components.LocalReduceMotion
 import com.arjunvision.arjunfitai.ui.components.systemReducesMotion
 import com.arjunvision.arjunfitai.ui.dashboard.DashboardScreen
@@ -60,11 +63,15 @@ import com.arjunvision.arjunfitai.ui.dashboard.DashboardViewModel
 import com.arjunvision.arjunfitai.ui.home.HomeActions
 import com.arjunvision.arjunfitai.ui.home.HomeScreen
 import com.arjunvision.arjunfitai.ui.placeholder.ComingSoonScreen
+import com.arjunvision.arjunfitai.ui.profile.ProfileScreen
 import com.arjunvision.arjunfitai.ui.splash.SplashScreen
+import com.arjunvision.arjunfitai.ui.sync.HealthSyncScreen
 import com.arjunvision.arjunfitai.ui.theme.AfColors
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.withTimeoutOrNull
+import kotlin.math.roundToInt
 
 private object Routes {
     const val HOME = "home"
@@ -78,6 +85,7 @@ private object Routes {
     const val COACH = "coach"
     const val PROFILE = "profile"
     const val HEALTH_SYNC = "health-sync"
+    const val CONNECT = "connect"
     const val ALL_DATA = "all-data"
 }
 
@@ -109,6 +117,22 @@ fun ArjunFitApp() {
 
     CompositionLocalProvider(LocalReduceMotion provides reduceMotion) {
         var showSplash by rememberSaveable { mutableStateOf(true) }
+        var openConnect by rememberSaveable { mutableStateOf(false) }
+        val scope = rememberCoroutineScope()
+        // First run: open Connect Device, unless Samsung Health access is already granted.
+        val finishSplash: () -> Unit = {
+            scope.launch {
+                val current = viewModel.state.value
+                if (!settingsRepository.settings.first().onboarded) {
+                    if (current.status == DashboardUiState.Status.READY && current.permissions?.allGranted == true) {
+                        settingsRepository.update { it.copy(onboarded = true) }
+                    } else {
+                        openConnect = true
+                    }
+                }
+                showSplash = false
+            }
+        }
         if (showSplash) {
             LaunchedEffect(Unit) {
                 // Long enough for the pop-in, then until the first read finishes (max 4s).
@@ -116,18 +140,35 @@ fun ArjunFitApp() {
                 withTimeoutOrNull(2_600L) {
                     viewModel.state.first { it.status != DashboardUiState.Status.CONNECTING && !it.isRefreshing }
                 }
-                showSplash = false
+                finishSplash()
             }
-            SplashScreen(onOpen = { showSplash = false })
+            SplashScreen(onOpen = finishSplash)
         } else {
-            MainScaffold(viewModel, state, settings)
+            MainScaffold(viewModel, state, settings, settingsRepository, openConnect, onConnectOpened = { openConnect = false })
         }
     }
 }
 
 @Composable
-private fun MainScaffold(viewModel: DashboardViewModel, state: DashboardUiState, settings: UserSettings) {
+private fun MainScaffold(
+    viewModel: DashboardViewModel,
+    state: DashboardUiState,
+    settings: UserSettings,
+    settingsRepository: SettingsRepository,
+    openConnect: Boolean,
+    onConnectOpened: () -> Unit,
+) {
     val nav = rememberNavController()
+    val activity = LocalActivity.current
+    val scope = rememberCoroutineScope()
+    // First run: Connect Device sits on top of Home, so Back lands on Home.
+    LaunchedEffect(openConnect) {
+        if (openConnect) {
+            nav.navigate(Routes.CONNECT)
+            onConnectOpened()
+        }
+    }
+    val markOnboarded: () -> Unit = { scope.launch { settingsRepository.update { it.copy(onboarded = true) } } }
     val backStack by nav.currentBackStackEntryAsState()
     val route = backStack?.destination?.route
 
@@ -163,8 +204,37 @@ private fun MainScaffold(viewModel: DashboardViewModel, state: DashboardUiState,
             composable(Routes.SLEEP) { ComingSoonScreen("Sleep & oxygen", 3, padding, back, allData) }
             composable(Routes.WEIGHT) { ComingSoonScreen("Weight tracker", 4, padding, back, allData) }
             composable(Routes.COACH) { ComingSoonScreen("AI coach", 7, padding, back) }
-            composable(Routes.PROFILE) { ComingSoonScreen("Profile", 2, padding, back) }
-            composable(Routes.HEALTH_SYNC) { ComingSoonScreen("Health sync", 2, padding, back, allData) }
+            composable(Routes.PROFILE) {
+                ProfileScreen(
+                    settings = settings,
+                    samsungConnected = state.status == DashboardUiState.Status.READY,
+                    onUpdate = settingsRepository::update,
+                    contentPadding = padding,
+                    onBack = back,
+                    onConnectedDevices = { nav.navigate(Routes.CONNECT) },
+                )
+            }
+            composable(Routes.HEALTH_SYNC) { HealthSyncScreen(viewModel, state, padding, onBack = back) }
+            composable(Routes.CONNECT) {
+                ConnectScreen(
+                    heartRateBpm = state.data.heartRate.firstOrNull()?.bpm?.roundToInt(),
+                    steps = state.data.steps,
+                    stepGoal = settings.stepGoal,
+                    contentPadding = padding,
+                    onBack = {
+                        markOnboarded()
+                        nav.popBackStack()
+                    },
+                    onConnect = {
+                        activity?.let {
+                            viewModel.requestPermissions(it) {
+                                markOnboarded()
+                                nav.navigate(Routes.HEALTH_SYNC) { popUpTo(Routes.CONNECT) { inclusive = true } }
+                            }
+                        }
+                    },
+                )
+            }
             composable(Routes.ALL_DATA) {
                 Box(Modifier.padding(padding).consumeWindowInsets(padding)) {
                     DashboardScreen(viewModel, onBack = back)

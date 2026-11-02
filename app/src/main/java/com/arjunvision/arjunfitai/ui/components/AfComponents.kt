@@ -3,13 +3,19 @@ package com.arjunvision.arjunfitai.ui.components
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.border
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -26,6 +32,7 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -105,6 +112,66 @@ fun Wordmark(style: TextStyle, modifier: Modifier = Modifier) {
         color = AfColors.Text,
         modifier = modifier,
     )
+}
+
+/** Back button + all-caps screen title ("HEALTH SYNC"). */
+@Composable
+fun AfScreenHeader(title: String, onBack: () -> Unit, modifier: Modifier = Modifier) {
+    Row(modifier, verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+        AfCircleButton(AfIcons.Back, "Back", AfColors.Text, onBack)
+        Text(title.uppercase(), style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.ExtraBold), color = AfColors.Text)
+    }
+}
+
+/** Full-width accent button (54dp primary CTA by default). */
+@Composable
+fun AfPrimaryButton(
+    text: String,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    icon: ImageVector? = null,
+    iconModifier: Modifier = Modifier,
+    height: Dp = 54.dp,
+    enabled: Boolean = true,
+) {
+    Row(
+        modifier
+            .fillMaxWidth()
+            .heightIn(min = height)
+            .clip(AfShapes.Pill)
+            .background(AfColors.Accent)
+            .clickable(enabled = enabled, role = Role.Button, onClick = onClick)
+            .padding(horizontal = 20.dp),
+        horizontalArrangement = Arrangement.spacedBy(10.dp, Alignment.CenterHorizontally),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        icon?.let { Icon(it, contentDescription = null, tint = AfColors.OnAccent, modifier = iconModifier.size(20.dp)) }
+        Text(text, style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold), color = AfColors.OnAccent)
+    }
+}
+
+/** Full-width outlined button (48dp). */
+@Composable
+fun AfOutlineButton(text: String, onClick: () -> Unit, modifier: Modifier = Modifier) {
+    Box(
+        modifier
+            .fillMaxWidth()
+            .heightIn(min = AfTouchTarget)
+            .clip(AfShapes.Pill)
+            .border(1.dp, AfColors.Border, AfShapes.Pill)
+            .clickable(role = Role.Button, onClick = onClick),
+        contentAlignment = Alignment.Center,
+    ) {
+        Text(text, style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.SemiBold), color = AfColors.Text)
+    }
+}
+
+/** 38dp rounded icon well (#252C36) used in rows and tiles. */
+@Composable
+fun AfIconWell(icon: ImageVector, tint: Color = AfColors.AccentSoft, size: Dp = 38.dp) {
+    Box(Modifier.size(size).clip(AfShapes.Inner).background(AfColors.Inner), contentAlignment = Alignment.Center) {
+        Icon(icon, contentDescription = null, tint = tint, modifier = Modifier.size(20.dp))
+    }
 }
 
 /** Accent pill used for short calls to action ("Log"). */

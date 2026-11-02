@@ -22,6 +22,30 @@ object AfIcons {
     val Nutrition = stroke("nutrition", "M7 3v8M5 3v5a2 2 0 0 0 4 0V3M7 11v10M17 3c-1.7 0-3 2-3 5s1.3 4 3 4v9")
     val Progress = stroke("progress", "M4 20V11M10 20V5M16 20v-6M2 21h20")
     val Back = stroke("back", "M15 5 8 12l7 7", width = 2.2f)
+    val Chevron = stroke("chevron", "m9 5 7 7-7 7")
+    val Band = stroke("band", "M11 4h2a3 3 0 0 1 3 3v10a3 3 0 0 1 -3 3h-2a3 3 0 0 1 -3 -3V7a3 3 0 0 1 3 -3z", "M10 4V2h4v2M10 20v2h4v-2")
+    val HeartPulse = stroke(
+        "heartPulse",
+        "M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z",
+        "M7 11h2.5l1.2-2 2 4 1.3-2H17",
+        width = 2.2f,
+    )
+    val Refresh = stroke("refresh", "M20 12a8 8 0 1 1-2.3-5.7L20 8", "M20 3v5h-5", width = 2.4f)
+    val Goals = stroke(
+        "goals",
+        "M3 12a9 9 0 1 0 18 0a9 9 0 1 0 -18 0",
+        "M7 12a5 5 0 1 0 10 0a5 5 0 1 0 -10 0",
+        "M11 12a1 1 0 1 0 2 0a1 1 0 1 0 -2 0",
+    )
+    val Bell = stroke("bell", "M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9M10 21h4")
+    val Sliders = stroke(
+        "sliders",
+        "M4 6h10M18 6h2M4 12h4M12 12h8M4 18h12",
+        "M14 6a2 2 0 1 0 4 0a2 2 0 1 0 -4 0",
+        "M8 12a2 2 0 1 0 4 0a2 2 0 1 0 -4 0",
+        "M16 18a2 2 0 1 0 4 0a2 2 0 1 0 -4 0",
+    )
+    val Lock = stroke("lock", "M7 11h10a2 2 0 0 1 2 2v6a2 2 0 0 1 -2 2H7a2 2 0 0 1 -2 -2v-6a2 2 0 0 1 2 -2z", "M8 11V7a4 4 0 0 1 8 0v4")
 
     private fun stroke(name: String, vararg paths: String, width: Float = 2f): ImageVector =
         ImageVector.Builder(name, 24.dp, 24.dp, 24f, 24f).apply {
