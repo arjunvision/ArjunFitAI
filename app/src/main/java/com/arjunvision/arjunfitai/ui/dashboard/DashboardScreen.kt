@@ -177,7 +177,8 @@ private fun HeartRateCard(data: HealthSnapshot) = SectionCard("Heart rate · 7 d
             Stat("Lowest", "%.0f".format(data.heartRate.minOf { it.minBpm ?: it.bpm }))
             Stat("Highest", "%.0f".format(data.heartRate.maxOf { it.maxBpm ?: it.bpm }))
         }
-        Caption("Latest at ${formatTime(latest.time)} · ${data.heartRate.size} readings")
+        val measurements = data.heartRate.sumOf { it.measurementCount }
+        Caption("Latest at ${formatTime(latest.time)} · $measurements ${if (measurements == 1) "measurement" else "measurements"}")
     }
 }
 
@@ -293,10 +294,15 @@ private val dateFormatter = DateTimeFormatter.ofPattern("EEE d MMM", Locale.getD
 private fun formatTime(instant: Instant) = timeFormatter.format(instant.atZone(ZoneId.systemDefault()))
 private fun formatDate(instant: Instant) = dateFormatter.format(instant.atZone(ZoneId.systemDefault()))
 
+/** "45s" under a minute, "12m" under an hour, otherwise "1h 05m". */
 private fun formatDuration(duration: Duration): String {
     val hours = duration.toHours()
     val minutes = duration.toMinutesPart()
-    return if (hours > 0) "${hours}h ${minutes}m" else "${minutes}m"
+    return when {
+        hours > 0 -> "${hours}h %02dm".format(minutes)
+        minutes > 0 -> "${minutes}m"
+        else -> "${duration.toSecondsPart()}s"
+    }
 }
 
 /** "TRACK_RUNNING" → "Track running". */

@@ -110,6 +110,8 @@ class SamsungHealthRepository(
                 bpm = bpm,
                 minBpm = point.getValue(DataType.HeartRateType.MIN_HEART_RATE),
                 maxBpm = point.getValue(DataType.HeartRateType.MAX_HEART_RATE),
+                // A record without series data is a single measurement.
+                measurementCount = point.getValue(DataType.HeartRateType.SERIES_DATA)?.size?.takeIf { it > 0 } ?: 1,
             )
         }
     }

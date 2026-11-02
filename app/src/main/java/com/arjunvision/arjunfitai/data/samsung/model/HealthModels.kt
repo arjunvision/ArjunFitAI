@@ -11,6 +11,8 @@ data class HeartRateSample(
     val bpm: Float,
     val minBpm: Float?,
     val maxBpm: Float?,
+    /** Individual measurements in this record (Samsung Health batches them into series). */
+    val measurementCount: Int,
 )
 
 data class ExerciseRecord(
