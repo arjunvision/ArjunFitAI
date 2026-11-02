@@ -60,6 +60,9 @@ import com.arjunvision.arjunfitai.ui.components.systemReducesMotion
 import com.arjunvision.arjunfitai.ui.dashboard.DashboardScreen
 import com.arjunvision.arjunfitai.ui.dashboard.DashboardUiState
 import com.arjunvision.arjunfitai.ui.dashboard.DashboardViewModel
+import com.arjunvision.arjunfitai.ui.detail.HeartRateScreen
+import com.arjunvision.arjunfitai.ui.detail.SleepScreen
+import com.arjunvision.arjunfitai.ui.detail.StepsScreen
 import com.arjunvision.arjunfitai.ui.home.HomeActions
 import com.arjunvision.arjunfitai.ui.home.HomeScreen
 import com.arjunvision.arjunfitai.ui.placeholder.ComingSoonScreen
@@ -81,6 +84,7 @@ private object Routes {
     const val STEPS = "steps"
     const val HEART_RATE = "heart-rate"
     const val SLEEP = "sleep"
+    const val OXYGEN = "sleep-oxygen"
     const val WEIGHT = "weight"
     const val COACH = "coach"
     const val PROFILE = "profile"
@@ -101,8 +105,9 @@ private val Tabs = listOf(
 @Composable
 fun ArjunFitApp() {
     val appContext = LocalContext.current.applicationContext
+    val repository = remember { SamsungHealthRepository(appContext) }
     val viewModel: DashboardViewModel = viewModel(
-        factory = viewModelFactory { initializer { DashboardViewModel(SamsungHealthRepository(appContext)) } }
+        factory = viewModelFactory { initializer { DashboardViewModel(repository) } }
     )
     val settingsRepository = remember { SettingsRepository(appContext) }
     val settings by settingsRepository.settings.collectAsStateWithLifecycle(initialValue = UserSettings())
@@ -144,7 +149,7 @@ fun ArjunFitApp() {
             }
             SplashScreen(onOpen = finishSplash)
         } else {
-            MainScaffold(viewModel, state, settings, settingsRepository, openConnect, onConnectOpened = { openConnect = false })
+            MainScaffold(viewModel, repository, state, settings, settingsRepository, openConnect, onConnectOpened = { openConnect = false })
         }
     }
 }
@@ -152,6 +157,7 @@ fun ArjunFitApp() {
 @Composable
 private fun MainScaffold(
     viewModel: DashboardViewModel,
+    repository: SamsungHealthRepository,
     state: DashboardUiState,
     settings: UserSettings,
     settingsRepository: SettingsRepository,
@@ -188,6 +194,7 @@ private fun MainScaffold(
                         onSteps = { nav.navigate(Routes.STEPS) },
                         onHeartRate = { nav.navigate(Routes.HEART_RATE) },
                         onSleep = { nav.navigate(Routes.SLEEP) },
+                        onOxygen = { nav.navigate(Routes.OXYGEN) },
                         onWeight = { nav.navigate(Routes.WEIGHT) },
                         onCoach = { nav.navigate(Routes.COACH) },
                         onProfile = { nav.navigate(Routes.PROFILE) },
@@ -199,9 +206,14 @@ private fun MainScaffold(
             composable(Routes.WORKOUT) { ComingSoonScreen("Workout", 5, padding, onBack = null) }
             composable(Routes.NUTRITION) { ComingSoonScreen("Nutrition", 4, padding, onBack = null) }
             composable(Routes.PROGRESS) { ComingSoonScreen("Progress", 6, padding, onBack = null) }
-            composable(Routes.STEPS) { ComingSoonScreen("Steps", 3, padding, back, allData) }
-            composable(Routes.HEART_RATE) { ComingSoonScreen("Heart rate", 3, padding, back, allData) }
-            composable(Routes.SLEEP) { ComingSoonScreen("Sleep & oxygen", 3, padding, back, allData) }
+            composable(Routes.STEPS) {
+                StepsScreen(state, settings.stepGoal, repository::getDailySteps, padding, onBack = back)
+            }
+            composable(Routes.HEART_RATE) {
+                HeartRateScreen(state, repository::getHeartRateSeries, repository::getDailyHeartRateRange, padding, onBack = back)
+            }
+            composable(Routes.SLEEP) { SleepScreen(state, startOnOxygen = false, contentPadding = padding, onBack = back) }
+            composable(Routes.OXYGEN) { SleepScreen(state, startOnOxygen = true, contentPadding = padding, onBack = back) }
             composable(Routes.WEIGHT) { ComingSoonScreen("Weight tracker", 4, padding, back, allData) }
             composable(Routes.COACH) { ComingSoonScreen("AI coach", 7, padding, back) }
             composable(Routes.PROFILE) {

@@ -47,6 +47,13 @@ object AfIcons {
     )
     val Lock = stroke("lock", "M7 11h10a2 2 0 0 1 2 2v6a2 2 0 0 1 -2 2H7a2 2 0 0 1 -2 -2v-6a2 2 0 0 1 2 -2z", "M8 11V7a4 4 0 0 1 8 0v4")
 
+    val Pin = stroke("pin", "M12 21s-6-5.5-6-11a6 6 0 0 1 12 0c0 5.5-6 11-6 11z", "M10 10a2 2 0 1 0 4 0a2 2 0 1 0 -4 0")
+    val Timer = stroke("timer", "M4 13a8 8 0 1 0 16 0a8 8 0 1 0 -16 0", "M12 9v4l2 2M9 2h6")
+    val Info = stroke("info", "M3 12a9 9 0 1 0 18 0a9 9 0 1 0 -18 0", "M12 8h.01M11 12h1v4h1")
+    val HeartFilled: ImageVector = ImageVector.Builder("heartFilled", 24.dp, 24.dp, 24f, 24f).apply {
+        addPath(addPathNodes("M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z"), fill = SolidColor(Color.Black))
+    }.build()
+
     private fun stroke(name: String, vararg paths: String, width: Float = 2f): ImageVector =
         ImageVector.Builder(name, 24.dp, 24.dp, 24f, 24f).apply {
             paths.forEach {

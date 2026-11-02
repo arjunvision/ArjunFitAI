@@ -6,14 +6,22 @@ import com.arjunvision.arjunfitai.data.samsung.model.ActivitySummary
 import com.arjunvision.arjunfitai.data.samsung.model.BloodOxygenSample
 import com.arjunvision.arjunfitai.data.samsung.model.ExerciseRecord
 import com.arjunvision.arjunfitai.data.samsung.model.HeartRateSample
+import com.arjunvision.arjunfitai.data.samsung.model.DailyRange
+import com.arjunvision.arjunfitai.data.samsung.model.HeartRatePoint
 import com.arjunvision.arjunfitai.data.samsung.model.SleepRecord
+import com.arjunvision.arjunfitai.data.samsung.model.SleepStageSegment
 import com.arjunvision.arjunfitai.data.samsung.model.SleepStage
 import com.arjunvision.arjunfitai.data.samsung.model.WeightRecord
 import com.samsung.android.sdk.health.data.HealthDataService
 import com.samsung.android.sdk.health.data.HealthDataStore
 import com.samsung.android.sdk.health.data.request.DataType
 import com.samsung.android.sdk.health.data.request.DataTypes
+import com.samsung.android.sdk.health.data.request.LocalDateFilter
+import com.samsung.android.sdk.health.data.request.LocalDateGroup
+import com.samsung.android.sdk.health.data.request.LocalDateGroupUnit
 import com.samsung.android.sdk.health.data.request.LocalTimeFilter
+import com.samsung.android.sdk.health.data.request.LocalTimeGroup
+import com.samsung.android.sdk.health.data.request.LocalTimeGroupUnit
 import com.samsung.android.sdk.health.data.request.Ordering
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
@@ -21,6 +29,7 @@ import kotlinx.coroutines.withContext
 import java.time.Clock
 import java.time.Duration
 import java.time.LocalDate
+import java.time.LocalDateTime
 import kotlin.coroutines.cancellation.CancellationException
 
 /**
@@ -147,7 +156,7 @@ class SamsungHealthRepository(
             .setOrdering(Ordering.DESC)
             .build()
         requireStore().readData(request).dataList.map { point ->
-            val stages = point.getValue(DataType.SleepType.SESSIONS).orEmpty().flatMap { it.stages.orEmpty() }
+            val stages = point.getValue(DataType.SleepType.SESSIONS).orEmpty().flatMap { it.stages.orEmpty() }.sortedBy { it.startTime }
             SleepRecord(
                 start = point.startTime,
                 end = point.endTime,
@@ -158,6 +167,9 @@ class SamsungHealthRepository(
                     .mapValues { (_, list) ->
                         list.fold(Duration.ZERO) { total, s -> total + Duration.between(s.startTime, s.endTime) }
                     },
+                stages = stages.map { s ->
+                    SleepStageSegment(s.startTime, s.endTime, SleepStage.entries.firstOrNull { it.name == s.stage.name } ?: SleepStage.UNDEFINED)
+                },
             )
         }
     }
@@ -195,6 +207,54 @@ class SamsungHealthRepository(
                 bmi = point.getValue(DataType.BodyCompositionType.BODY_MASS_INDEX),
             )
         }
+    }
+
+    /**
+     * Every heart-rate measurement between [from] and [to] (local time), oldest first. Samsung Health
+     * batches measurements into records with SERIES_DATA; a record without a series counts as one point.
+     */
+    suspend fun getHeartRateSeries(from: LocalDateTime, to: LocalDateTime): Result<List<HeartRatePoint>> = call {
+        val request = DataTypes.HEART_RATE.readDataRequestBuilder
+            .setLocalTimeFilter(LocalTimeFilter.of(from, to))
+            .setOrdering(Ordering.ASC)
+            .build()
+        requireStore().readData(request).dataList.flatMap { point ->
+            val series = point.getValue(DataType.HeartRateType.SERIES_DATA).orEmpty()
+            if (series.isNotEmpty()) {
+                series.map { HeartRatePoint(it.startTime, it.heartRate) }
+            } else {
+                listOfNotNull(point.getValue(DataType.HeartRateType.HEART_RATE)?.let { HeartRatePoint(point.startTime, it) })
+            }
+        }.sortedBy { it.time }
+    }
+
+    /** Daily lowest/highest heart rate for [from]..[to] inclusive (Samsung's own MIN/MAX aggregates). */
+    suspend fun getDailyHeartRateRange(from: LocalDate, to: LocalDate): Result<List<DailyRange>> = call {
+        val store = requireStore()
+        val filter = LocalDateFilter.of(from, to, true, true)
+        val group = LocalDateGroup.of(LocalDateGroupUnit.DAILY, 1)
+        val mins = store.aggregateData(
+            DataType.HeartRateType.MIN.requestBuilder.setLocalDateFilterWithGroup(filter, group).build()
+        ).dataList.mapNotNull { d -> d.value?.let { d.getStartLocalDateTime().toLocalDate() to it } }.toMap()
+        val maxs = store.aggregateData(
+            DataType.HeartRateType.MAX.requestBuilder.setLocalDateFilterWithGroup(filter, group).build()
+        ).dataList.mapNotNull { d -> d.value?.let { d.getStartLocalDateTime().toLocalDate() to it } }.toMap()
+        (mins.keys intersect maxs.keys).sorted().map { DailyRange(it, mins.getValue(it), maxs.getValue(it)) }
+    }
+
+    /** Step totals per local day for [from]..[to] inclusive. Days without steps are absent. */
+    suspend fun getDailySteps(from: LocalDate, to: LocalDate): Result<Map<LocalDate, Long>> = call {
+        val request = DataType.StepsType.TOTAL.requestBuilder
+            .setLocalTimeFilterWithGroup(
+                LocalTimeFilter.of(from.atStartOfDay(), to.plusDays(1).atStartOfDay()),
+                LocalTimeGroup.of(LocalTimeGroupUnit.DAILY, 1),
+            )
+            .setOrdering(Ordering.ASC)
+            .build()
+        requireStore().aggregateData(request).dataList
+            .mapNotNull { d -> d.value?.let { d.getStartLocalDateTime().toLocalDate() to it } }
+            .groupBy({ it.first }, { it.second })
+            .mapValues { (_, v) -> v.sum() }
     }
 
     private fun requireStore(): HealthDataStore =

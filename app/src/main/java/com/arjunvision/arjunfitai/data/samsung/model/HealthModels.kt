@@ -30,12 +30,16 @@ data class ExerciseRecord(
 
 enum class SleepStage { AWAKE, LIGHT, DEEP, REM, UNDEFINED }
 
+data class SleepStageSegment(val start: Instant, val end: Instant, val stage: SleepStage)
+
 data class SleepRecord(
     val start: Instant,
     val end: Instant?,
     val duration: Duration?,
     val score: Int?,
     val stageDurations: Map<SleepStage, Duration>,
+    /** Stages in time order, for the timeline bar. */
+    val stages: List<SleepStageSegment> = emptyList(),
 )
 
 data class BloodOxygenSample(
@@ -59,3 +63,9 @@ data class ActivitySummary(
     val activeTime: Duration?,
     val distanceMeters: Float?,
 )
+
+/** One heart-rate measurement (a point inside a Samsung Health series). */
+data class HeartRatePoint(val time: Instant, val bpm: Float)
+
+/** Lowest and highest heart rate on one day. */
+data class DailyRange(val date: java.time.LocalDate, val min: Float, val max: Float)

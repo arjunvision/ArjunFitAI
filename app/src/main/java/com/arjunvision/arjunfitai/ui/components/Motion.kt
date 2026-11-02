@@ -96,3 +96,15 @@ fun rememberHeartBeatScale(): State<Float> {
         label = "heartScale",
     )
 }
+
+/** Gentle bob: 0 → -[amplitudeDp] → 0 over [periodMillis]. Static when motion is reduced. */
+@Composable
+fun rememberFloatOffsetDp(amplitudeDp: Float, periodMillis: Int): State<Float> {
+    if (LocalReduceMotion.current) return remember { mutableFloatStateOf(0f) }
+    return rememberInfiniteTransition(label = "float").animateFloat(
+        initialValue = 0f,
+        targetValue = -amplitudeDp,
+        animationSpec = infiniteRepeatable(tween(periodMillis / 2, easing = FastOutSlowInEasing), RepeatMode.Reverse),
+        label = "floatDp",
+    )
+}

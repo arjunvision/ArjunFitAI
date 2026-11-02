@@ -74,6 +74,7 @@ class HomeActions(
     val onSteps: () -> Unit,
     val onHeartRate: () -> Unit,
     val onSleep: () -> Unit,
+    val onOxygen: () -> Unit,
     val onWeight: () -> Unit,
     val onCoach: () -> Unit,
     val onProfile: () -> Unit,
@@ -296,7 +297,7 @@ private fun VitalsGrid(heartRate: String?, activeKcal: String?, sleep: String?, 
         }
         Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
             VitalTile(AfIcons.Moon, AfColors.AccentSoft, sleep, null, "Sleep", actions.onSleep, Modifier.weight(1f))
-            VitalTile(AfIcons.Drop, AfColors.Water, spo2, null, "Blood oxygen", actions.onSleep, Modifier.weight(1f))
+            VitalTile(AfIcons.Drop, AfColors.Water, spo2, null, "Blood oxygen", actions.onOxygen, Modifier.weight(1f))
         }
     }
 }
