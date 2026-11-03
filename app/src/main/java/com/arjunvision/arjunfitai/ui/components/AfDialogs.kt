@@ -44,7 +44,14 @@ fun AfDialog(
 
 /** Outlined text field in ArjunFit colours. */
 @Composable
-fun AfTextField(value: String, onValueChange: (String) -> Unit, label: String, keyboard: KeyboardOptions, error: String? = null) {
+fun AfTextField(
+    value: String,
+    onValueChange: (String) -> Unit,
+    label: String,
+    keyboard: KeyboardOptions,
+    error: String? = null,
+    visualTransformation: androidx.compose.ui.text.input.VisualTransformation = androidx.compose.ui.text.input.VisualTransformation.None,
+) {
     OutlinedTextField(
         value = value,
         onValueChange = onValueChange,
@@ -53,6 +60,7 @@ fun AfTextField(value: String, onValueChange: (String) -> Unit, label: String, k
         isError = error != null,
         supportingText = error?.let { { Text(it) } },
         keyboardOptions = keyboard,
+        visualTransformation = visualTransformation,
         colors = OutlinedTextFieldDefaults.colors(
             focusedBorderColor = AfColors.Accent,
             unfocusedBorderColor = AfColors.Border,

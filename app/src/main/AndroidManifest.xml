@@ -8,6 +8,8 @@
 
     <!-- Rest-timer notification (Android 13+ asks first); Galaxy Wearable mirrors it to the Fit3. -->
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <!-- AI Coach talks to the Claude API (only when you send a message). -->
+    <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.VIBRATE" />
 
     <application

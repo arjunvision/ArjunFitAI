@@ -66,7 +66,7 @@ import com.arjunvision.arjunfitai.ui.theme.AfShapes
 import kotlinx.coroutines.launch
 import java.util.Locale
 
-private enum class ProfileDialog { NAME, GOALS, APP_SETTINGS, PRIVACY }
+private enum class ProfileDialog { NAME, GOALS, APP_SETTINGS, PRIVACY, COACH }
 
 @Composable
 fun ProfileScreen(
@@ -76,6 +76,9 @@ fun ProfileScreen(
     contentPadding: PaddingValues,
     onBack: () -> Unit,
     onConnectedDevices: () -> Unit,
+    coachKeySaved: Boolean,
+    onRemoveCoachKey: () -> Unit,
+    onOpenCoach: () -> Unit,
 ) {
     val scope = rememberCoroutineScope()
     var dialog by rememberSaveable { mutableStateOf<ProfileDialog?>(null) }
@@ -134,6 +137,12 @@ fun ProfileScreen(
                 onCheckedChange = { on -> save { it.copy(milestoneAlerts = on) } },
             )
             HorizontalDivider(color = AfColors.Inner)
+            SettingsRow(
+                AfIcons.Coach, "AI coach",
+                (if (coachKeySaved) "Your Claude key saved" else "No API key yet") + " · sharing " + (if (settings.coachConsent) "on" else "off"),
+                onClick = { dialog = ProfileDialog.COACH },
+            )
+            HorizontalDivider(color = AfColors.Inner)
             SettingsRow(AfIcons.Sliders, "App settings", "Units kg · accent colour · animations", onClick = { dialog = ProfileDialog.APP_SETTINGS })
             HorizontalDivider(color = AfColors.Inner)
             SettingsRow(AfIcons.Lock, "Data & privacy", "Read-only · health data stays on this phone", onClick = { dialog = ProfileDialog.PRIVACY })
@@ -185,9 +194,36 @@ fun ProfileScreen(
                 "Your health data is read on this phone and is not sent anywhere. Your name and goals are " +
                 "stored in ArjunFit on this phone.\n\nChange what ArjunFit may read any time in Health sync › " +
                 "Review permissions.\n\nWorkouts, plans and sets are stored in ArjunFit on this phone.\n\n" +
+                "AI coach: only when you send a message, your message and a short daily summary go to Anthropic's Claude API using your own key, " +
+                "which is stored encrypted on this phone. The chat itself stays on this phone.\n\n" +
                 "Exercises and photos: free-exercise-db by yuhonas (public domain, Unlicense). " +
                 "Fonts: Poppins (SIL Open Font License 1.1), Satisfy (Apache License 2.0).",
         ) { dialog = null }
+        ProfileDialog.COACH -> AfDialog(
+            title = "AI coach",
+            onDismiss = { dialog = null },
+            confirm = (if (coachKeySaved) "Open coach" else "Add key") to { dialog = null; onOpenCoach() },
+            showCancel = true,
+        ) {
+            Text(
+                "The coach uses Claude Opus 5.5 with your own Anthropic API key, billed to your Anthropic account. " +
+                    "When you send a message, ArjunFit sends it with a short summary of today's numbers — never your name or raw records.",
+                style = MaterialTheme.typography.bodyMedium,
+            )
+            Row(
+                Modifier.fillMaxWidth().heightIn(min = 56.dp).toggleable(value = settings.coachConsent, role = Role.Switch, onValueChange = { on -> save { it.copy(coachConsent = on) } }),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Text("Share daily summary with the coach", style = MaterialTheme.typography.bodyLarge.copy(fontSize = 14.sp), color = AfColors.Text, modifier = Modifier.weight(1f))
+                AfSwitch(settings.coachConsent)
+            }
+            if (coachKeySaved) {
+                Text(
+                    "Remove API key", style = MaterialTheme.typography.labelLarge, color = AfColors.AccentSoft,
+                    modifier = Modifier.heightIn(min = 48.dp).clickable(role = Role.Button) { onRemoveCoachKey() }.padding(vertical = 14.dp),
+                )
+            }
+        }
         null -> Unit
     }
 }

@@ -10,6 +10,8 @@ navigation = "2.9.5"
 datastore = "1.2.1"
 room = "2.8.3"
 ksp = "2.3.0"
+# Official Anthropic Java SDK (also works from Kotlin) for the AI Coach.
+anthropic = "2.34.0"
 # Samsung Health Data SDK needs Gson at runtime (developer.samsung.com/health/data, "App module").
 gson = "2.11.0"
 junit = "4.13.2"
@@ -31,6 +33,7 @@ datastore-preferences = { group = "androidx.datastore", name = "datastore-prefer
 room-runtime = { group = "androidx.room", name = "room-runtime", version.ref = "room" }
 room-ktx = { group = "androidx.room", name = "room-ktx", version.ref = "room" }
 room-compiler = { group = "androidx.room", name = "room-compiler", version.ref = "room" }
+anthropic-java = { group = "com.anthropic", name = "anthropic-java", version.ref = "anthropic" }
 gson = { group = "com.google.code.gson", name = "gson", version.ref = "gson" }
 junit = { group = "junit", name = "junit", version.ref = "junit" }
 

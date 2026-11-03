@@ -17,8 +17,8 @@ android {
         // Samsung Health (and so the Data SDK) runs on Android 10 / API 29 and later.
         minSdk = 29
         targetSdk = 36
-        versionCode = 8
-        versionName = "0.7.0"
+        versionCode = 10
+        versionName = "0.8.1"
     }
 
     buildTypes {
@@ -31,6 +31,10 @@ android {
         // The Samsung Health Data SDK supports Java 17 or later.
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
+    }
+    packaging {
+        // The Anthropic SDK's dependencies ship duplicate licence/metadata files.
+        resources.excludes += setOf("META-INF/*.kotlin_module", "META-INF/versions/**", "META-INF/DEPENDENCIES", "META-INF/LICENSE*", "META-INF/NOTICE*")
     }
     buildFeatures {
         compose = true
@@ -84,6 +88,7 @@ dependencies {
     implementation(libs.room.runtime)
     implementation(libs.room.ktx)
     ksp(libs.room.compiler)
+    implementation(libs.anthropic.java)
     debugImplementation(libs.compose.ui.tooling)
 
     testImplementation(libs.junit)

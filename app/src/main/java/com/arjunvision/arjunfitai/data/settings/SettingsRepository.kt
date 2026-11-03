@@ -26,6 +26,8 @@ data class UserSettings(
     val fatTargetG: Int = 70,
     val waterGoalMl: Int = 3_000,
     val milestoneAlerts: Boolean = false,
+    /** You agreed to send the AI Coach a short daily summary (never raw records). */
+    val coachConsent: Boolean = false,
     /** True once the first-run Connect Device screen has been seen or skipped. */
     val onboarded: Boolean = false,
 )
@@ -51,6 +53,7 @@ class SettingsRepository(context: Context) {
             prefs[FAT_TARGET] = next.fatTargetG
             prefs[WATER_GOAL] = next.waterGoalMl
             prefs[MILESTONE_ALERTS] = next.milestoneAlerts
+            prefs[COACH_CONSENT] = next.coachConsent
             prefs[ONBOARDED] = next.onboarded
         }
     }
@@ -69,6 +72,7 @@ class SettingsRepository(context: Context) {
             fatTargetG = prefs[FAT_TARGET] ?: defaults.fatTargetG,
             waterGoalMl = prefs[WATER_GOAL] ?: defaults.waterGoalMl,
             milestoneAlerts = prefs[MILESTONE_ALERTS] ?: defaults.milestoneAlerts,
+            coachConsent = prefs[COACH_CONSENT] ?: defaults.coachConsent,
             onboarded = prefs[ONBOARDED] ?: defaults.onboarded,
         )
     }
@@ -85,6 +89,7 @@ class SettingsRepository(context: Context) {
         val FAT_TARGET = intPreferencesKey("fat_target_g")
         val WATER_GOAL = intPreferencesKey("water_goal_ml")
         val MILESTONE_ALERTS = booleanPreferencesKey("milestone_alerts")
+        val COACH_CONSENT = booleanPreferencesKey("coach_consent")
         val ONBOARDED = booleanPreferencesKey("onboarded")
     }
 }

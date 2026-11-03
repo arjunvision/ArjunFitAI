@@ -71,6 +71,14 @@ import com.arjunvision.arjunfitai.data.workout.WorkoutDatabase
 import com.arjunvision.arjunfitai.data.workout.WorkoutRepository
 import com.arjunvision.arjunfitai.ui.workout.RestTimer
 import com.arjunvision.arjunfitai.ui.workout.workoutGraph
+import com.arjunvision.arjunfitai.data.coach.ApiKeyStore
+import com.arjunvision.arjunfitai.data.coach.CoachDatabase
+import com.arjunvision.arjunfitai.ui.coach.CoachController
+import com.arjunvision.arjunfitai.ui.coach.CoachScreen
+import com.arjunvision.arjunfitai.ui.coach.buildCoachInputs
+import java.time.Instant
+import java.time.LocalDate
+import java.time.ZoneId
 import com.arjunvision.arjunfitai.ui.workout.WorkoutRoutes
 import com.arjunvision.arjunfitai.ui.progress.ProgressActions
 import com.arjunvision.arjunfitai.ui.progress.ProgressScreen
@@ -191,6 +199,8 @@ private fun MainScaffold(
     val scope = rememberCoroutineScope()
     val restTimer = remember { RestTimer(appContext, scope) }
     val library = produceState(emptyList<Exercise>()) { value = withContext(Dispatchers.Default) { ExerciseLibrary.load(appContext) } }
+    val coach = remember { CoachController(scope, CoachDatabase.get(appContext), ApiKeyStore(appContext)) }
+    val coachKeySaved by coach.hasKey.collectAsStateWithLifecycle()
     // First run: Connect Device sits on top of Home, so Back lands on Home.
     LaunchedEffect(openConnect) {
         if (openConnect) {
@@ -259,7 +269,26 @@ private fun MainScaffold(
             composable(Routes.SLEEP) { SleepScreen(state, startOnOxygen = false, contentPadding = padding, onBack = back) }
             composable(Routes.OXYGEN) { SleepScreen(state, startOnOxygen = true, contentPadding = padding, onBack = back) }
             composable(Routes.WEIGHT) { WeightScreen(weighIns, settings, db, padding, onBack = back) }
-            composable(Routes.COACH) { ComingSoonScreen("AI coach", 7, padding, back) }
+            composable(Routes.COACH) {
+                val zone = remember { ZoneId.systemDefault() }
+                val today = LocalDate.now(zone)
+                val dayStart = today.atStartOfDay(zone).toInstant().toEpochMilli()
+                val dayEnd = today.plusDays(1).atStartOfDay(zone).toInstant().toEpochMilli()
+                val plans by workoutRepo.plans.collectAsStateWithLifecycle(emptyList())
+                val sessions by workoutRepo.sessions.collectAsStateWithLifecycle(emptyList())
+                val sets by workoutRepo.sets.collectAsStateWithLifecycle(emptyList())
+                val food by remember(dayStart) { db.food().between(dayStart, dayEnd) }.collectAsStateWithLifecycle(emptyList())
+                val water by remember(dayStart) { db.water().between(dayStart, dayEnd) }.collectAsStateWithLifecycle(emptyList())
+                CoachScreen(
+                    controller = coach,
+                    inputs = buildCoachInputs(today, Instant.now(), zone, state.data, settings, weighIns, plans, sessions, sets, food, water),
+                    name = settings.name,
+                    consent = settings.coachConsent,
+                    onConsent = { agreed -> scope.launch { settingsRepository.update { it.copy(coachConsent = agreed) } } },
+                    contentPadding = padding,
+                    onBack = back,
+                )
+            }
             composable(Routes.PROFILE) {
                 ProfileScreen(
                     settings = settings,
@@ -268,6 +297,9 @@ private fun MainScaffold(
                     contentPadding = padding,
                     onBack = back,
                     onConnectedDevices = { nav.navigate(Routes.CONNECT) },
+                    coachKeySaved = coachKeySaved,
+                    onRemoveCoachKey = coach::removeKey,
+                    onOpenCoach = { nav.navigate(Routes.COACH) },
                 )
             }
             composable(Routes.HEALTH_SYNC) { HealthSyncScreen(viewModel, state, padding, onBack = back) }

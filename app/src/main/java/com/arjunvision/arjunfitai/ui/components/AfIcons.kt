@@ -60,6 +60,7 @@ object AfIcons {
     val Play: ImageVector = ImageVector.Builder("play", 24.dp, 24.dp, 24f, 24f).apply {
         addPath(addPathNodes("M7 4.5v15l12-7.5z"), fill = SolidColor(Color.Black))
     }.build()
+    val Send = stroke("send", "M5 12h14M13 6l6 6-6 6", width = 2.4f)
     val Plus = stroke("plus", "M12 5v14M5 12h14", width = 2.6f)
     val Trash = stroke("trash", "M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3")
     val ChevronLeft = stroke("chevronLeft", "M15 5 8 12l7 7", width = 2.2f)
