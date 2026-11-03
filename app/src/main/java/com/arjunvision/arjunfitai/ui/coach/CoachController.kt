@@ -7,6 +7,7 @@ import com.arjunvision.arjunfitai.data.coach.ChatRole
 import com.arjunvision.arjunfitai.data.coach.CoachClient
 import com.arjunvision.arjunfitai.data.coach.CoachDatabase
 import com.arjunvision.arjunfitai.data.coach.CoachReply
+import com.arjunvision.arjunfitai.data.coach.CutOff
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -56,7 +57,19 @@ class CoachController(private val scope: CoroutineScope, private val db: CoachDa
                 _partial.value = ""
                 val reply = CoachClient(key).reply(COACH_SYSTEM_PROMPT, history) { _partial.value = it }
                 val saved = when (reply) {
-                    is CoachReply.Text -> ChatMessage(time = System.currentTimeMillis(), role = ChatRole.COACH, text = reply.text)
+                    is CoachReply.Text -> {
+                        reply.cutOff?.let { cut ->
+                            // Keep what arrived, then say clearly that it stopped early.
+                            db.chat().insert(ChatMessage(time = System.currentTimeMillis(), role = ChatRole.COACH, text = reply.text))
+                            ChatMessage(
+                                time = System.currentTimeMillis() + 1, role = ChatRole.COACH, kind = ChatKind.NOTICE,
+                                text = when (cut) {
+                                    CutOff.LENGTH -> "That reply hit the length limit and was cut off. Ask \"continue\" for the rest."
+                                    CutOff.CONNECTION -> "The connection dropped before the reply finished. Ask \"continue\" or send your message again."
+                                },
+                            )
+                        } ?: ChatMessage(time = System.currentTimeMillis(), role = ChatRole.COACH, text = reply.text)
+                    }
                     CoachReply.Refused -> ChatMessage(
                         time = System.currentTimeMillis(), role = ChatRole.COACH, kind = ChatKind.NOTICE,
                         text = "I can't help with that one. Try asking another way — and for anything medical, please talk to a doctor.",

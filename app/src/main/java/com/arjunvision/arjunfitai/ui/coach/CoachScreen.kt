@@ -231,7 +231,7 @@ private fun Chat(controller: CoachController, inputs: CoachInputs, name: String,
         if (sending) item {
             val p = partial
             if (p.isNullOrEmpty()) TypingDots() else Bubble(AfColors.Card, CoachBubble, Modifier.semantics { liveRegion = LiveRegionMode.Polite }) {
-                Text(p, style = MaterialTheme.typography.bodyMedium.copy(lineHeight = 20.sp), color = AfColors.Text)
+                Text(coachMarkdown(p), style = MaterialTheme.typography.bodyMedium.copy(lineHeight = 20.sp), color = AfColors.Text)
             }
         }
     }
@@ -305,7 +305,11 @@ private fun MessageBubble(m: ChatMessage) {
         }
     } else {
         Bubble(if (m.kind == ChatKind.NOTICE) AfColors.Inner else AfColors.Card, CoachBubble) {
-            Text(m.text, style = MaterialTheme.typography.bodyMedium.copy(lineHeight = 20.sp), color = if (m.kind == ChatKind.NOTICE) AfColors.AccentSoft else AfColors.Text)
+            Text(
+                if (m.kind == ChatKind.NOTICE) androidx.compose.ui.text.AnnotatedString(m.text) else coachMarkdown(m.text),
+                style = MaterialTheme.typography.bodyMedium.copy(lineHeight = 20.sp),
+                color = if (m.kind == ChatKind.NOTICE) AfColors.AccentSoft else AfColors.Text,
+            )
         }
     }
 }
