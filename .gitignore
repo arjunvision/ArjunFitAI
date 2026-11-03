@@ -12,3 +12,10 @@
 
 # Samsung Health Data SDK: download from developer.samsung.com (see README), never commit
 app/libs/*.aar
+
+# Signing keys and secrets: never commit
+*.jks
+*.keystore
+*.p12
+.env
+.env.*
