@@ -7,6 +7,14 @@
 Kotlin + Jetpack Compose app that reads Samsung Health data (READ-only) through the
 Samsung Health Data SDK.
 
+## Design
+
+[![ArjunFit design: 14 screens](docs/design/arjunfit-screens.jpg)](docs/design/arjunfit-screens.jpg)
+
+Design concept with sample numbers; the app itself shows only your real data. Click the image for
+full size (GitHub's download button saves it). The editable version is the
+[ArjunFit design canvas](https://claude.ai/artifact/KQCt47XnQcCAeKeRZuY2tx).
+
 ## Setup
 
 > **The Samsung Health Data SDK is not in this repository.** `app/libs/*.aar` is git-ignored;
