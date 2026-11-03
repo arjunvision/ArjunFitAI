@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="app/src/main/res/drawable-nodpi/arjunfit_logo.png" alt="ArjunFit logo" width="160">
+</p>
+
 # ArjunFit
 
 Kotlin + Jetpack Compose app that reads Samsung Health data (READ-only) through the
