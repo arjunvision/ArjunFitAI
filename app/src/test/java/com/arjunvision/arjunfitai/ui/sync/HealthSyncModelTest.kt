@@ -1,9 +1,9 @@
 package com.arjunvision.arjunfitai.ui.sync
 
-import com.arjunvision.arjunfitai.data.samsung.model.BloodOxygenSample
-import com.arjunvision.arjunfitai.data.samsung.model.ExerciseRecord
-import com.arjunvision.arjunfitai.data.samsung.model.HeartRateSample
-import com.arjunvision.arjunfitai.data.samsung.model.WeightRecord
+import com.arjunvision.arjunfitai.data.health.model.BloodOxygenSample
+import com.arjunvision.arjunfitai.data.health.model.ExerciseRecord
+import com.arjunvision.arjunfitai.data.health.model.HeartRateSample
+import com.arjunvision.arjunfitai.data.health.model.WeightRecord
 import org.junit.Assert.assertEquals
 import org.junit.Test
 import java.time.Duration

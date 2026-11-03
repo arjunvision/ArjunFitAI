@@ -2,8 +2,8 @@ package com.arjunvision.arjunfitai.ui.nutrition
 
 import com.arjunvision.arjunfitai.data.local.FoodEntry
 import com.arjunvision.arjunfitai.data.local.WaterEntry
-import com.arjunvision.arjunfitai.data.samsung.model.NutritionRecord
-import com.arjunvision.arjunfitai.data.samsung.model.WaterRecord
+import com.arjunvision.arjunfitai.data.health.model.NutritionRecord
+import com.arjunvision.arjunfitai.data.health.model.WaterRecord
 import java.time.Instant
 import kotlin.math.roundToInt
 

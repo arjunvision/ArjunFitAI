@@ -56,10 +56,10 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.arjunvision.arjunfitai.data.local.FoodEntry
 import com.arjunvision.arjunfitai.data.local.LocalLogDatabase
 import com.arjunvision.arjunfitai.data.local.WaterEntry
-import com.arjunvision.arjunfitai.data.samsung.HealthMetric
-import com.arjunvision.arjunfitai.data.samsung.model.ActivitySummary
-import com.arjunvision.arjunfitai.data.samsung.model.NutritionRecord
-import com.arjunvision.arjunfitai.data.samsung.model.WaterRecord
+import com.arjunvision.arjunfitai.data.health.HealthMetric
+import com.arjunvision.arjunfitai.data.health.model.ActivitySummary
+import com.arjunvision.arjunfitai.data.health.model.NutritionRecord
+import com.arjunvision.arjunfitai.data.health.model.WaterRecord
 import com.arjunvision.arjunfitai.data.settings.UserSettings
 import com.arjunvision.arjunfitai.ui.components.AfCard
 import com.arjunvision.arjunfitai.ui.components.AfDialog

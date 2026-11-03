@@ -1,7 +1,7 @@
 package com.arjunvision.arjunfitai.ui.home
 
-import com.arjunvision.arjunfitai.data.samsung.model.SleepRecord
-import com.arjunvision.arjunfitai.data.samsung.model.WeightRecord
+import com.arjunvision.arjunfitai.data.health.model.SleepRecord
+import com.arjunvision.arjunfitai.data.health.model.WeightRecord
 import com.arjunvision.arjunfitai.ui.dashboard.HealthSnapshot
 import java.text.NumberFormat
 import java.time.Duration

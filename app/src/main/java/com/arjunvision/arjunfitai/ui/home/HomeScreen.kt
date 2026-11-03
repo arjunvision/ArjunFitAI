@@ -87,7 +87,7 @@ fun HomeScreen(
     state: DashboardUiState,
     settings: UserSettings,
     /** Samsung Health + ArjunFit weigh-ins. */
-    weights: List<com.arjunvision.arjunfitai.data.samsung.model.WeightRecord>,
+    weights: List<com.arjunvision.arjunfitai.data.health.model.WeightRecord>,
     actions: HomeActions,
     contentPadding: PaddingValues,
 ) {

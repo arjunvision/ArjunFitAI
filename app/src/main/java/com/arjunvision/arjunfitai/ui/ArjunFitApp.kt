@@ -50,7 +50,8 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
-import com.arjunvision.arjunfitai.data.samsung.SamsungHealthRepository
+import com.arjunvision.arjunfitai.data.health.HealthSources
+import com.arjunvision.arjunfitai.data.samsung.createSamsungSource
 import com.arjunvision.arjunfitai.data.settings.SettingsRepository
 import com.arjunvision.arjunfitai.data.settings.UserSettings
 import com.arjunvision.arjunfitai.ui.components.AfIcons
@@ -128,9 +129,9 @@ private val Tabs = listOf(
 @Composable
 fun ArjunFitApp() {
     val appContext = LocalContext.current.applicationContext
-    val repository = remember { SamsungHealthRepository(appContext) }
+    val healthSources = remember { HealthSources(listOfNotNull(createSamsungSource(appContext))) }
     val viewModel: DashboardViewModel = viewModel(
-        factory = viewModelFactory { initializer { DashboardViewModel(repository) } }
+        factory = viewModelFactory { initializer { DashboardViewModel(healthSources) } }
     )
     val settingsRepository = remember { SettingsRepository(appContext) }
     val settings by settingsRepository.settings.collectAsStateWithLifecycle(initialValue = UserSettings())
@@ -172,7 +173,7 @@ fun ArjunFitApp() {
             }
             SplashScreen(onOpen = finishSplash)
         } else {
-            MainScaffold(viewModel, repository, state, settings, settingsRepository, openConnect, onConnectOpened = { openConnect = false })
+            MainScaffold(viewModel, healthSources, state, settings, settingsRepository, openConnect, onConnectOpened = { openConnect = false })
         }
     }
 }
@@ -180,7 +181,7 @@ fun ArjunFitApp() {
 @Composable
 private fun MainScaffold(
     viewModel: DashboardViewModel,
-    repository: SamsungHealthRepository,
+    healthSources: HealthSources,
     state: DashboardUiState,
     settings: UserSettings,
     settingsRepository: SettingsRepository,
@@ -241,7 +242,7 @@ private fun MainScaffold(
             composable(Routes.NUTRITION) {
                 NutritionScreen(
                     state, settings, db,
-                    repository::getNutrition, repository::getWaterIntake, repository::getActivitySummary,
+                    healthSources::getNutrition, healthSources::getWaterIntake, healthSources::getActivitySummary,
                     padding,
                 )
             }
@@ -251,7 +252,7 @@ private fun MainScaffold(
                 val sets by workoutRepo.sets.collectAsStateWithLifecycle(emptyList())
                 ProgressScreen(
                     state, settings, weighIns, plans, sessions, sets,
-                    loadDailySteps = repository::getDailySteps,
+                    loadDailySteps = healthSources::getStepsHistory,
                     actions = ProgressActions(
                         onLogWeight = { nav.navigate(Routes.WEIGHT) },
                         onWorkouts = { nav.navigateToTab(Routes.WORKOUT) },
@@ -261,10 +262,10 @@ private fun MainScaffold(
                 )
             }
             composable(Routes.STEPS) {
-                StepsScreen(state, settings.stepGoal, repository::getDailySteps, padding, onBack = back)
+                StepsScreen(state, settings.stepGoal, healthSources::getStepsHistory, padding, onBack = back)
             }
             composable(Routes.HEART_RATE) {
-                HeartRateScreen(state, repository::getHeartRateSeries, repository::getDailyHeartRateRange, padding, onBack = back)
+                HeartRateScreen(state, healthSources::getHeartRateSeries, healthSources::getDailyHeartRateRange, padding, onBack = back)
             }
             composable(Routes.SLEEP) { SleepScreen(state, startOnOxygen = false, contentPadding = padding, onBack = back) }
             composable(Routes.OXYGEN) { SleepScreen(state, startOnOxygen = true, contentPadding = padding, onBack = back) }

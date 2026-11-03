@@ -1,11 +1,11 @@
 package com.arjunvision.arjunfitai.ui.detail
 
-import com.arjunvision.arjunfitai.data.samsung.model.BloodOxygenSample
-import com.arjunvision.arjunfitai.data.samsung.model.ExerciseRecord
-import com.arjunvision.arjunfitai.data.samsung.model.HeartRatePoint
-import com.arjunvision.arjunfitai.data.samsung.model.SleepRecord
-import com.arjunvision.arjunfitai.data.samsung.model.SleepStage
-import com.arjunvision.arjunfitai.data.samsung.model.SleepStageSegment
+import com.arjunvision.arjunfitai.data.health.model.BloodOxygenSample
+import com.arjunvision.arjunfitai.data.health.model.ExerciseRecord
+import com.arjunvision.arjunfitai.data.health.model.HeartRatePoint
+import com.arjunvision.arjunfitai.data.health.model.SleepRecord
+import com.arjunvision.arjunfitai.data.health.model.SleepStage
+import com.arjunvision.arjunfitai.data.health.model.SleepStageSegment
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Test

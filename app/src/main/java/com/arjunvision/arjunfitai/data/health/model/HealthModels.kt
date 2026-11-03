@@ -1,4 +1,4 @@
-package com.arjunvision.arjunfitai.data.samsung.model
+package com.arjunvision.arjunfitai.data.health.model
 
 import java.time.Duration
 import java.time.Instant

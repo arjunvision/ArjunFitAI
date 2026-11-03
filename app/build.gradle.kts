@@ -17,8 +17,23 @@ android {
         // Samsung Health (and so the Data SDK) runs on Android 10 / API 29 and later.
         minSdk = 29
         targetSdk = 36
-        versionCode = 11
-        versionName = "0.8.2"
+        versionCode = 12
+        versionName = "0.9.0-alpha1"
+    }
+
+    // Two builds of the same app (same applicationId, same code in src/main):
+    // - samsung: includes the Samsung Health Data SDK (needs the AAR in app/libs, see README).
+    // - open: no Samsung SDK, so anyone can build it (students, the public repo, GitHub Actions).
+    flavorDimensions += "health"
+    productFlavors {
+        create("samsung") {
+            dimension = "health"
+            isDefault = true
+        }
+        create("open") {
+            dimension = "health"
+            versionNameSuffix = "-open"
+        }
     }
 
     buildTypes {
@@ -66,10 +81,14 @@ val checkSamsungHealthSdk by tasks.registering {
         }
     }
 }
-tasks.named("preBuild") { dependsOn(checkSamsungHealthSdk) }
+// Only the "samsung" build needs the AAR; the "open" build never touches it.
+tasks.matching { it.name.startsWith("preSamsung") && it.name.endsWith("Build") }.configureEach {
+    dependsOn(checkSamsungHealthSdk)
+}
 
 dependencies {
-    implementation(samsungHealthAar)
+    "samsungImplementation"(samsungHealthAar)
+    // Used by the Samsung SDK and by the exercise library.
     implementation(libs.gson)
 
     implementation(libs.androidx.core.ktx)

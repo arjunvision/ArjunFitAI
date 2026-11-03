@@ -26,6 +26,9 @@ full size (GitHub's download button saves it). The editable version is the
    `samsung-health-data-api*.aar` is picked up; the build stops with a clear message if none is there.
 3. Open the project in Android Studio and run on a real phone (the SDK does not support emulators).
 
+No Samsung SDK? Build the `open` variant instead: `./gradlew assembleOpenDebug` (or pick
+`openDebug` in Android Studio's Build Variants panel). It leaves Samsung Health out entirely.
+
 ## Samsung Health on the test phone
 
 - Samsung Health 6.30.2 or later, opened once with its setup and terms completed.

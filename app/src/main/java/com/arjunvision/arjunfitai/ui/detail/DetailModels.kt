@@ -1,10 +1,10 @@
 package com.arjunvision.arjunfitai.ui.detail
 
-import com.arjunvision.arjunfitai.data.samsung.model.BloodOxygenSample
-import com.arjunvision.arjunfitai.data.samsung.model.ExerciseRecord
-import com.arjunvision.arjunfitai.data.samsung.model.HeartRatePoint
-import com.arjunvision.arjunfitai.data.samsung.model.SleepRecord
-import com.arjunvision.arjunfitai.data.samsung.model.SleepStage
+import com.arjunvision.arjunfitai.data.health.model.BloodOxygenSample
+import com.arjunvision.arjunfitai.data.health.model.ExerciseRecord
+import com.arjunvision.arjunfitai.data.health.model.HeartRatePoint
+import com.arjunvision.arjunfitai.data.health.model.SleepRecord
+import com.arjunvision.arjunfitai.data.health.model.SleepStage
 import com.arjunvision.arjunfitai.ui.home.EMPTY
 import com.arjunvision.arjunfitai.ui.home.formatSleep
 import com.arjunvision.arjunfitai.ui.home.formatSteps

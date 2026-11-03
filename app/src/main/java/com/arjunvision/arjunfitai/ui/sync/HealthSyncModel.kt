@@ -1,13 +1,13 @@
 package com.arjunvision.arjunfitai.ui.sync
 
-import com.arjunvision.arjunfitai.data.samsung.model.ActivitySummary
-import com.arjunvision.arjunfitai.data.samsung.model.BloodOxygenSample
-import com.arjunvision.arjunfitai.data.samsung.model.ExerciseRecord
-import com.arjunvision.arjunfitai.data.samsung.model.HeartRateSample
-import com.arjunvision.arjunfitai.data.samsung.model.NutritionRecord
-import com.arjunvision.arjunfitai.data.samsung.model.WaterRecord
-import com.arjunvision.arjunfitai.data.samsung.model.SleepRecord
-import com.arjunvision.arjunfitai.data.samsung.model.WeightRecord
+import com.arjunvision.arjunfitai.data.health.model.ActivitySummary
+import com.arjunvision.arjunfitai.data.health.model.BloodOxygenSample
+import com.arjunvision.arjunfitai.data.health.model.ExerciseRecord
+import com.arjunvision.arjunfitai.data.health.model.HeartRateSample
+import com.arjunvision.arjunfitai.data.health.model.NutritionRecord
+import com.arjunvision.arjunfitai.data.health.model.WaterRecord
+import com.arjunvision.arjunfitai.data.health.model.SleepRecord
+import com.arjunvision.arjunfitai.data.health.model.WeightRecord
 import com.arjunvision.arjunfitai.ui.home.formatSteps
 import com.arjunvision.arjunfitai.ui.home.lastNightSleep
 import java.time.DayOfWeek

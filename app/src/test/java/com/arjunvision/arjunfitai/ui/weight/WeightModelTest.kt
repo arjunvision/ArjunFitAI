@@ -1,7 +1,7 @@
 package com.arjunvision.arjunfitai.ui.weight
 
 import com.arjunvision.arjunfitai.data.local.WeightEntry
-import com.arjunvision.arjunfitai.data.samsung.model.WeightRecord
+import com.arjunvision.arjunfitai.data.health.model.WeightRecord
 import com.arjunvision.arjunfitai.ui.nutrition.Source
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull

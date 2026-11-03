@@ -1,20 +1,23 @@
 package com.arjunvision.arjunfitai.ui.dashboard
 
 import android.app.Activity
+import androidx.activity.ComponentActivity
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.arjunvision.arjunfitai.data.samsung.HealthMetric
-import com.arjunvision.arjunfitai.data.samsung.PermissionStatus
-import com.arjunvision.arjunfitai.data.samsung.SamsungHealthError
-import com.arjunvision.arjunfitai.data.samsung.SamsungHealthRepository
-import com.arjunvision.arjunfitai.data.samsung.model.ActivitySummary
-import com.arjunvision.arjunfitai.data.samsung.model.BloodOxygenSample
-import com.arjunvision.arjunfitai.data.samsung.model.ExerciseRecord
-import com.arjunvision.arjunfitai.data.samsung.model.HeartRateSample
-import com.arjunvision.arjunfitai.data.samsung.model.NutritionRecord
-import com.arjunvision.arjunfitai.data.samsung.model.WaterRecord
-import com.arjunvision.arjunfitai.data.samsung.model.SleepRecord
-import com.arjunvision.arjunfitai.data.samsung.model.WeightRecord
+import com.arjunvision.arjunfitai.data.health.HealthDataError
+import com.arjunvision.arjunfitai.data.health.HealthMetric
+import com.arjunvision.arjunfitai.data.health.HealthSources
+import com.arjunvision.arjunfitai.data.health.PermissionStatus
+import com.arjunvision.arjunfitai.data.health.SourceKind
+import com.arjunvision.arjunfitai.data.health.SourcePreference
+import com.arjunvision.arjunfitai.data.health.model.ActivitySummary
+import com.arjunvision.arjunfitai.data.health.model.BloodOxygenSample
+import com.arjunvision.arjunfitai.data.health.model.ExerciseRecord
+import com.arjunvision.arjunfitai.data.health.model.HeartRateSample
+import com.arjunvision.arjunfitai.data.health.model.NutritionRecord
+import com.arjunvision.arjunfitai.data.health.model.WaterRecord
+import com.arjunvision.arjunfitai.data.health.model.SleepRecord
+import com.arjunvision.arjunfitai.data.health.model.WeightRecord
 import com.arjunvision.arjunfitai.ui.home.WinterArc
 import java.time.Instant
 import java.time.LocalDate
@@ -43,17 +46,19 @@ data class HealthSnapshot(
 
 data class DashboardUiState(
     val status: Status = Status.CONNECTING,
+    /** The source being read; null until one is chosen. */
+    val source: SourceKind? = null,
     val permissions: PermissionStatus? = null,
-    val error: SamsungHealthError? = null,
+    val error: HealthDataError? = null,
     val isRefreshing: Boolean = false,
     val data: HealthSnapshot = HealthSnapshot(),
-    /** When the last read from Samsung Health finished. */
+    /** When the last read from the source finished. */
     val lastUpdated: Instant? = null,
 ) {
     enum class Status { CONNECTING, NEEDS_PERMISSION, READY, ERROR }
 }
 
-class DashboardViewModel(private val repository: SamsungHealthRepository) : ViewModel() {
+class DashboardViewModel(private val sources: HealthSources) : ViewModel() {
 
     private val _state = MutableStateFlow(DashboardUiState())
     val state: StateFlow<DashboardUiState> = _state.asStateFlow()
@@ -62,22 +67,32 @@ class DashboardViewModel(private val repository: SamsungHealthRepository) : View
         start()
     }
 
-    /** Connects, checks which READ permissions are granted, and loads what we're allowed to read. */
+    /** Picks the source, checks which READ permissions are granted, and loads what we're allowed to read. */
     fun start() {
         viewModelScope.launch {
             _state.update { it.copy(status = DashboardUiState.Status.CONNECTING, error = null) }
-            repository.connectToSamsungHealth().onFailure {
+            sources.choose(SourcePreference.AUTO, previous = _state.value.source)
+            val source = sources.current.value ?: return@launch fail(HealthSources.noSource())
+            _state.update { it.copy(source = source.kind) }
+            source.connect().onFailure {
                 fail(it)
                 return@launch
             }
-            repository.checkPermissions().fold(onSuccess = { onPermissions(it) }, onFailure = ::fail)
+            source.checkPermissions().fold(onSuccess = { onPermissions(it) }, onFailure = ::fail)
         }
     }
 
-    /** Shows Samsung Health's consent screen; [onDone] runs once the answer is known, before data loads. */
+    /** Shows the source's consent screen; [onDone] runs once the answer is known, before data loads. */
     fun requestPermissions(activity: Activity, onDone: () -> Unit = {}) {
+        val source = sources.current.value
+        val host = activity as? ComponentActivity
+        if (source == null || host == null) {
+            fail(HealthSources.noSource())
+            onDone()
+            return
+        }
         viewModelScope.launch {
-            repository.requestReadPermissions(activity).fold(
+            source.requestReadPermissions(host).fold(
                 onSuccess = { onPermissions(it, onDone) },
                 onFailure = {
                     fail(it)
@@ -87,7 +102,7 @@ class DashboardViewModel(private val repository: SamsungHealthRepository) : View
         }
     }
 
-    /** Opens Samsung Health's fix-up flow; [onResume] re-checks when the user comes back. */
+    /** Opens the source's own fix-up flow; [onResume] re-checks when the user comes back. */
     fun resolveError(activity: Activity) {
         _state.value.error?.resolve(activity)
     }
@@ -114,6 +129,7 @@ class DashboardViewModel(private val repository: SamsungHealthRepository) : View
     }
 
     private suspend fun load(permissions: PermissionStatus) {
+        val source = sources.current.value ?: return fail(HealthSources.noSource())
         _state.update { it.copy(isRefreshing = true) }
         val granted = permissions.granted
         val errors = mutableMapOf<HealthMetric, String>()
@@ -126,16 +142,17 @@ class DashboardViewModel(private val repository: SamsungHealthRepository) : View
             }
         }
 
+        val today = LocalDate.now()
         val snapshot = coroutineScope {
-            val steps = async { if (HealthMetric.STEPS in granted) repository.getTodaySteps() else null }
-            val activity = async { if (HealthMetric.ACTIVITY_SUMMARY in granted) repository.getTodayActivitySummary() else null }
-            val heartRate = async { if (HealthMetric.HEART_RATE in granted) repository.getHeartRateHistory() else null }
-            val exercise = async { if (HealthMetric.EXERCISE in granted) repository.getExerciseHistory() else null }
-            val sleep = async { if (HealthMetric.SLEEP in granted) repository.getSleepHistory() else null }
-            val oxygen = async { if (HealthMetric.BLOOD_OXYGEN in granted) repository.getBloodOxygenHistory() else null }
-            val weight = async { if (HealthMetric.BODY_COMPOSITION in granted) repository.getWeightHistory(weightHistoryDays()) else null }
-            val nutrition = async { if (HealthMetric.NUTRITION in granted) repository.getNutrition(LocalDate.now()) else null }
-            val water = async { if (HealthMetric.WATER_INTAKE in granted) repository.getWaterIntake(LocalDate.now()) else null }
+            val steps = async { if (HealthMetric.STEPS in granted) source.getTodaySteps() else null }
+            val activity = async { if (HealthMetric.ACTIVITY_SUMMARY in granted) source.getActivitySummary(today) else null }
+            val heartRate = async { if (HealthMetric.HEART_RATE in granted) source.getHeartRateHistory() else null }
+            val exercise = async { if (HealthMetric.EXERCISE in granted) source.getExerciseHistory() else null }
+            val sleep = async { if (HealthMetric.SLEEP in granted) source.getSleepHistory() else null }
+            val oxygen = async { if (HealthMetric.BLOOD_OXYGEN in granted) source.getBloodOxygenHistory() else null }
+            val weight = async { if (HealthMetric.BODY_COMPOSITION in granted) source.getWeightHistory(weightHistoryDays()) else null }
+            val nutrition = async { if (HealthMetric.NUTRITION in granted) source.getNutrition(today) else null }
+            val water = async { if (HealthMetric.WATER_INTAKE in granted) source.getWaterIntake(today) else null }
             HealthSnapshot(
                 steps = steps.await().valueOr(HealthMetric.STEPS, null),
                 activity = activity.await().valueOr(HealthMetric.ACTIVITY_SUMMARY, null),
@@ -163,7 +180,7 @@ class DashboardViewModel(private val repository: SamsungHealthRepository) : View
         _state.update {
             it.copy(
                 status = DashboardUiState.Status.ERROR,
-                error = SamsungHealthError.from(throwable),
+                error = HealthDataError.from(throwable, it.source),
                 isRefreshing = false,
             )
         }

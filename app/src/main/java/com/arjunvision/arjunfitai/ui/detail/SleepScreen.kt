@@ -34,7 +34,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.arjunvision.arjunfitai.data.samsung.model.SleepStage
+import com.arjunvision.arjunfitai.data.health.model.SleepStage
 import com.arjunvision.arjunfitai.ui.components.AfCard
 import com.arjunvision.arjunfitai.ui.components.AfIcons
 import com.arjunvision.arjunfitai.ui.components.AfMedicalFooter

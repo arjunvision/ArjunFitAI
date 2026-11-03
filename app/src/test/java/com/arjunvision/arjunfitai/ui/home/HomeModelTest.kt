@@ -1,6 +1,6 @@
 package com.arjunvision.arjunfitai.ui.home
 
-import com.arjunvision.arjunfitai.data.samsung.model.WeightRecord
+import com.arjunvision.arjunfitai.data.health.model.WeightRecord
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Test

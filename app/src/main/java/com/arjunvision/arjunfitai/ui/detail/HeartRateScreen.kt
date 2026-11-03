@@ -27,9 +27,9 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.arjunvision.arjunfitai.data.samsung.HealthMetric
-import com.arjunvision.arjunfitai.data.samsung.model.DailyRange
-import com.arjunvision.arjunfitai.data.samsung.model.HeartRatePoint
+import com.arjunvision.arjunfitai.data.health.HealthMetric
+import com.arjunvision.arjunfitai.data.health.model.DailyRange
+import com.arjunvision.arjunfitai.data.health.model.HeartRatePoint
 import com.arjunvision.arjunfitai.ui.components.AfCard
 import com.arjunvision.arjunfitai.ui.components.AfCircleButton
 import com.arjunvision.arjunfitai.ui.components.AfEmptyChart

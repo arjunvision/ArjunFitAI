@@ -38,7 +38,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.arjunvision.arjunfitai.data.samsung.HealthMetric
+import com.arjunvision.arjunfitai.data.health.HealthMetric
 import com.arjunvision.arjunfitai.data.settings.UserSettings
 import com.arjunvision.arjunfitai.data.workout.PlanEntity
 import com.arjunvision.arjunfitai.data.workout.SessionEntity
