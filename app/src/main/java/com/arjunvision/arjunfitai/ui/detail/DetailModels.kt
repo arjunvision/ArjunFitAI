@@ -72,8 +72,8 @@ fun stepsChart(daily: Map<LocalDate, Long>, period: Period, today: LocalDate, go
         val starts = (5 downTo 0).map { thisWeek.minusWeeks(it.toLong()) }
         val bars = starts.map { start ->
             val end = minOf(start.plusDays(6), today)
-            val dayCount = start.datesUntil(end.plusDays(1)).count()
-            val total = start.datesUntil(end.plusDays(1)).toList().sumOf { daily[it] ?: 0L }
+            val dayCount = daysBetween(start, end).size.toLong()
+            val total = daysBetween(start, end).sumOf { daily[it] ?: 0L }
             StepBar(start.format(DateTimeFormatter.ofPattern("d MMM", Locale.ENGLISH)), total, start == thisWeek, total >= goal * dayCount)
         }
         StepsChart("Weekly totals", bars, averageNote(daily, starts.first(), today))
@@ -83,16 +83,20 @@ fun stepsChart(daily: Map<LocalDate, Long>, period: Period, today: LocalDate, go
         val starts = (5 downTo 0).map { thisMonth.minusMonths(it.toLong()) }
         val bars = starts.map { start ->
             val end = minOf(start.plusMonths(1).minusDays(1), today)
-            val dayCount = start.datesUntil(end.plusDays(1)).count()
-            val total = start.datesUntil(end.plusDays(1)).toList().sumOf { daily[it] ?: 0L }
+            val dayCount = daysBetween(start, end).size.toLong()
+            val total = daysBetween(start, end).sumOf { daily[it] ?: 0L }
             StepBar(start.format(DateTimeFormatter.ofPattern("MMM", Locale.ENGLISH)), total, start == thisMonth, total >= goal * dayCount)
         }
         StepsChart("Monthly totals", bars, averageNote(daily, starts.first(), today))
     }
 }
 
+/** Every date from [from] to [to], inclusive. (LocalDate.datesUntil isn't available on Android 10–11.) */
+internal fun daysBetween(from: LocalDate, to: LocalDate): List<LocalDate> =
+    generateSequence(from) { it.plusDays(1) }.takeWhile { !it.isAfter(to) }.toList()
+
 private fun averageNote(daily: Map<LocalDate, Long>, from: LocalDate, today: LocalDate): String {
-    val days = from.datesUntil(today.plusDays(1)).toList()
+    val days = daysBetween(from, today)
     val withSteps = days.filter { (daily[it] ?: 0L) > 0L }
     if (withSteps.isEmpty()) return "No steps recorded in this period"
     val avg = withSteps.sumOf { daily.getValue(it) }.toDouble() / withSteps.size
@@ -184,7 +188,7 @@ private fun deepShare(r: SleepRecord): Double? {
 }
 
 /** "1h 42m", "47m". */
-fun shortDuration(d: Duration): String = if (d.toHours() > 0) "${d.toHours()}h %02dm".format(Locale.ENGLISH, d.toMinutesPart()) else "${d.toMinutes()}m"
+fun shortDuration(d: Duration): String = if (d.toHours() > 0) "${d.toHours()}h %02dm".format(Locale.ENGLISH, d.toMinutes() % 60) else "${d.toMinutes()}m"
 
 // ---------- Blood oxygen ----------
 

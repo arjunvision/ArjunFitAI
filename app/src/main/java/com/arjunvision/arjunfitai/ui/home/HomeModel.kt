@@ -141,8 +141,8 @@ fun formatKm(meters: Float): String {
 /** "48 min" under an hour, otherwise "1h 05m". */
 fun formatActiveTime(duration: Duration): String {
     val hours = duration.toHours()
-    return if (hours > 0) "${hours}h %02dm".format(Locale.ENGLISH, duration.toMinutesPart()) else "${duration.toMinutes()} min"
+    return if (hours > 0) "${hours}h %02dm".format(Locale.ENGLISH, duration.toMinutes() % 60) else "${duration.toMinutes()} min"
 }
 
 /** "7h 05m". */
-fun formatSleep(duration: Duration): String = "${duration.toHours()}h %02dm".format(Locale.ENGLISH, duration.toMinutesPart())
+fun formatSleep(duration: Duration): String = "${duration.toHours()}h %02dm".format(Locale.ENGLISH, duration.toMinutes() % 60)

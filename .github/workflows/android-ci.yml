@@ -1,0 +1,71 @@
+# Builds, lints and unit-tests ArjunFit on every push and pull request, and scans the history for secrets.
+#
+# CI builds the "open" variant: the Samsung Health Data SDK can't be redistributed, so it is never in
+# the repository (see README). The "samsung" variant is built and tested locally.
+name: Android CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+# Least privilege: jobs can read the code and nothing else unless they say so.
+permissions:
+  contents: read
+
+# A newer push to the same branch cancels the older, still-running build.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Build, lint and test (open variant)
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: 17
+
+      # Also validates the Gradle wrapper against Gradle's published checksums.
+      # "basic" = the open-source (MIT) cache, free for private repositories.
+      - uses: gradle/actions/setup-gradle@v6
+        with:
+          cache-provider: basic
+
+      - name: Build, lint and unit-test
+        run: ./gradlew --no-daemon assembleOpenDebug lintOpenDebug testOpenDebugUnitTest
+
+      - name: Upload lint and test reports
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: reports
+          path: |
+            app/build/reports/
+            app/build/test-results/
+          retention-days: 14
+
+  secrets:
+    name: Secret scan (Gitleaks)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      pull-requests: read
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          # The whole history, so a key committed and later deleted is still found.
+          fetch-depth: 0
+
+      # No licence key needed for a personal account (only for organisations).
+      - uses: gitleaks/gitleaks-action@v3
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITLEAKS_ENABLE_COMMENTS: false

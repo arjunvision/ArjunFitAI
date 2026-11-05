@@ -91,4 +91,16 @@ class DetailModelsTest {
         assertEquals(OxygenStats(latest = 97, average = 97, lowest = 93), oxygenStats(samples))
         assertNull(oxygenStats(emptyList()))
     }
+
+    @Test fun daysBetweenIsInclusiveAndCrossesMonths() {
+        val days = daysBetween(LocalDate.of(2026, 10, 30), LocalDate.of(2026, 11, 2))
+        assertEquals(listOf(30, 31, 1, 2), days.map { it.dayOfMonth })
+        assertEquals(listOf(today), daysBetween(today, today))
+        assertEquals(emptyList<LocalDate>(), daysBetween(today, today.minusDays(1)))
+    }
+
+    @Test fun shortDurationPadsMinutes() {
+        assertEquals("1h 05m", shortDuration(Duration.ofMinutes(65)))
+        assertEquals("47m", shortDuration(Duration.ofMinutes(47)))
+    }
 }

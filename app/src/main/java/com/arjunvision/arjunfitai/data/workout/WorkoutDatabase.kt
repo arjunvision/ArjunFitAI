@@ -99,7 +99,7 @@ interface SessionDao {
     @Delete suspend fun delete(session: SessionEntity)
 }
 
-@Database(entities = [PlanEntity::class, PlanItemEntity::class, SessionEntity::class, SetEntity::class], version = 1, exportSchema = false)
+@Database(entities = [PlanEntity::class, PlanItemEntity::class, SessionEntity::class, SetEntity::class], version = 1, exportSchema = true)
 abstract class WorkoutDatabase : RoomDatabase() {
     abstract fun plans(): PlanDao
     abstract fun sessions(): SessionDao

@@ -6,6 +6,8 @@ plugins {
     alias(libs.plugins.kotlin.parcelize)
     // Room code generation for the in-app food, water and weight log.
     alias(libs.plugins.ksp)
+    // Exports database schemas (app/schemas) so future updates can migrate saved logs instead of wiping them.
+    alias(libs.plugins.room)
 }
 
 android {
@@ -17,8 +19,8 @@ android {
         // Samsung Health (and so the Data SDK) runs on Android 10 / API 29 and later.
         minSdk = 29
         targetSdk = 36
-        versionCode = 12
-        versionName = "0.9.0-alpha1"
+        versionCode = 13
+        versionName = "0.9.0-alpha2"
     }
 
     // Two builds of the same app (same applicationId, same code in src/main):
@@ -56,6 +58,10 @@ android {
         // Profile › About shows BuildConfig.VERSION_NAME.
         buildConfig = true
     }
+}
+
+room {
+    schemaDirectory("$projectDir/schemas")
 }
 
 kotlin {

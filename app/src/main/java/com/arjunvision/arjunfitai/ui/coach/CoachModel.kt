@@ -52,7 +52,7 @@ fun coachSummary(i: CoachInputs): String {
     lines += "Steps today: ${i.steps?.let(::formatSteps) ?: "not available"} (goal ${formatSteps(i.stepGoal.toLong())})."
     i.activeKcal?.let { lines += "Active calories today: ${it.roundToInt()} kcal." }
     if (i.hrLow != null && i.hrHigh != null) lines += "Heart rate today: ${i.hrLow}–${i.hrHigh} bpm."
-    lines += "Sleep last night: ${i.sleep?.let { "${it.toHours()}h ${it.toMinutesPart()}m" } ?: "not recorded"}."
+    lines += "Sleep last night: ${i.sleep?.let { "${it.toHours()}h ${it.toMinutes() % 60}m" } ?: "not recorded"}."
     i.spo2?.let { lines += "Latest SpO2: $it%." }
     lines += when {
         i.weight == null -> "Weight: not logged yet; target ${kg(i.targetKg)} kg."

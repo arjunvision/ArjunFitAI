@@ -37,7 +37,7 @@ interface ChatDao {
     @Query("DELETE FROM chat_message") suspend fun clear()
 }
 
-@Database(entities = [ChatMessage::class], version = 1, exportSchema = false)
+@Database(entities = [ChatMessage::class], version = 1, exportSchema = true)
 abstract class CoachDatabase : RoomDatabase() {
     abstract fun chat(): ChatDao
 

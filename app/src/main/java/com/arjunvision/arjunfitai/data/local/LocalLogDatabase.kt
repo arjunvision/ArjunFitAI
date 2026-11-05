@@ -67,7 +67,7 @@ interface WeightDao {
     @Delete suspend fun delete(entry: WeightEntry)
 }
 
-@Database(entities = [FoodEntry::class, WaterEntry::class, WeightEntry::class], version = 1, exportSchema = false)
+@Database(entities = [FoodEntry::class, WaterEntry::class, WeightEntry::class], version = 1, exportSchema = true)
 abstract class LocalLogDatabase : RoomDatabase() {
     abstract fun food(): FoodDao
     abstract fun water(): WaterDao
