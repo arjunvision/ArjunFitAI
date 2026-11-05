@@ -11,7 +11,7 @@ datastore = "1.2.1"
 room = "2.8.3"
 ksp = "2.3.0"
 # Official Anthropic Java SDK (also works from Kotlin) for the AI Coach.
-anthropic = "2.34.0"
+anthropic = "3.3.0"
 # Samsung Health Data SDK needs Gson at runtime (developer.samsung.com/health/data, "App module").
 gson = "2.11.0"
 junit = "4.13.2"
