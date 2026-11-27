@@ -151,4 +151,6 @@ AGP 8.13.1 · Gradle 9.2.1 · Kotlin 2.2.21 · Compose BOM 2025.10.01 · Java 17
 
 ## Licence
 
-No licence has been chosen yet; all rights reserved by Arjun Vision Tech Solutions until one is.
+ArjunFitAI is licensed under the [Apache License 2.0](LICENSE). Copyright 2026 Arjun Vision Tech Solutions.
+Third-party fonts, data and SDKs keep their own licences (listed above); the Samsung Health Data SDK is not
+included and is not covered by this licence.
